@@ -1,0 +1,785 @@
+<html lang="de"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Combimetics - Smarter Preisvergleich</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.iconify.design/2/2.1.0/iconify.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
+    
+    <style>
+      body { font-family: 'Inter', sans-serif; }
+      .modal-overlay { z-index: 9999; }
+      /* Transition für den Warenkorb-Drawer */
+      .cart-drawer { transition: transform 0.3s ease-in-out; }
+      .cart-drawer-open { transform: translateX(0); }
+      .cart-drawer-closed { transform: translateX(100%); }
+    </style>
+  </head>
+  <body class="bg-neutral-50 font-sans min-h-screen flex flex-col">
+    
+    <header class="bg-white border-b border-neutral-200 sticky top-0 z-50 h-24">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
+        <div class="flex h-full items-center justify-between">
+          
+          <div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="window.location.reload()">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" class="h-44 w-auto">
+              <path fill="#314353" d="M400.516 467.016C404.824 466.961 409.133 466.969 413.442 467.038C412.838 477.505 413.085 490.91 413.276 501.4C419.157 496.894 425.022 493.711 432.572 493.079C441.424 492.322 450.21 495.135 456.976 500.892C472.266 513.892 472.695 536.28 459.91 551.137C447.289 564.782 427.995 564.828 413.323 554.532L413.425 560.539C408.363 560.252 405.564 560.165 400.502 560.499L400.667 500.827C400.694 491.552 401.265 475.764 400.516 467.016ZM437.232 549.403C449.333 548.066 458.024 537.118 456.579 525.029C455.135 512.939 444.111 504.347 432.035 505.898C420.109 507.43 411.646 518.287 413.072 530.226C414.498 542.165 425.281 550.724 437.232 549.403Z"></path>
+              <path fill="#314353" d="M704.053 365.892C724.21 363.221 742.766 377.26 745.678 397.384C748.589 417.508 734.771 436.23 714.683 439.381C701.474 441.452 688.172 436.262 679.856 425.792C671.541 415.322 669.497 401.19 674.504 388.793C679.512 376.396 690.798 367.649 704.053 365.892Z"></path>
+              <path fill="#ACB8BC" d="M703.046 368.84C721.892 365.568 739.791 378.289 742.898 397.164C746.005 416.038 733.128 433.825 714.227 436.767C695.559 439.673 678.038 426.988 674.969 408.346C671.9 389.704 684.431 372.072 703.046 368.84Z"></path>
+              <path fill="#314353" d="M641.885 411.802C661.542 409.767 679.125 424.053 681.158 443.709C683.192 463.366 668.905 480.948 649.249 482.981C629.594 485.013 612.012 470.728 609.979 451.073C607.946 431.418 622.23 413.836 641.885 411.802ZM648.748 480.164C666.823 478.416 680.07 462.364 678.355 444.286C676.641 426.208 660.613 412.932 642.532 414.613C624.404 416.298 611.085 432.377 612.804 450.502C614.523 468.627 630.626 481.916 648.748 480.164Z"></path>
+              <path fill="#314353" d="M242.713 493.36C261.391 490.219 279.11 502.72 282.416 521.369C285.723 540.019 273.381 557.849 254.761 561.321C235.906 564.837 217.801 552.304 214.453 533.418C211.105 514.532 223.798 496.54 242.713 493.36ZM250.253 558.752C267.604 557.712 280.795 542.753 279.657 525.409C278.518 508.065 263.484 494.959 246.147 496.196C228.949 497.423 215.971 512.31 217.1 529.515C218.229 546.72 233.042 559.783 250.253 558.752Z"></path>
+              <path fill="#314353" d="M317.232 493.578C328.324 492.836 334.872 494.086 341.746 503.418C342.312 502.767 342.89 502.126 343.481 501.497C353.323 491.086 370.947 490.338 381.314 500.22C390.247 508.733 389.471 521.308 389.432 532.574C389.4 541.886 389.328 551.207 389.28 560.521L376.504 560.548L376.603 534.017C376.607 522.874 378.438 505.731 362.413 505.478C358.426 505.43 354.595 507.023 351.819 509.885C345.367 516.425 346.852 528.249 346.951 537.113L346.989 560.509C342.789 560.351 338.586 560.352 334.387 560.511C333.669 547.077 334.685 533.623 333.978 519.972C333.304 506.931 319.357 501.51 309.82 509.945C303.949 515.138 304.654 524.984 304.736 532.202C304.841 541.559 304.866 551.055 304.859 560.49C300.257 560.299 296.582 560.095 291.953 560.477C292.424 539.134 292.051 515.829 291.94 494.356L304.52 494.436L304.645 500.448C309.176 495.977 311.108 494.997 317.232 493.578Z"></path>
+              <path fill="#314353" d="M570.931 493.188C578.601 492.557 586.149 494.02 591.881 499.54C595.116 502.673 597.444 506.623 598.618 510.971C600.883 519.149 599.876 549.722 600.044 560.431L587.346 560.485C586.644 546.727 588.875 526.49 585.623 513.567C584.544 509.281 578.119 506.569 574.039 505.167C556.094 508.105 558.107 519.88 558.091 534.244C558.025 542.966 558.049 551.688 558.164 560.409C553.688 560.279 550.182 560.159 545.689 560.505L545.776 535.125C545.772 527.473 546.734 516.276 541.702 510.392C539.226 507.546 535.68 505.855 531.911 505.723C525.353 505.456 517.931 511.189 516.493 517.35C515.376 522.132 515.814 530.048 515.839 535.089C515.894 543.507 515.887 551.925 515.82 560.343C511.712 560.418 507.517 560.271 503.403 560.176C502.594 539.434 503.012 515.467 503.136 494.612L515.577 494.498L515.596 500.303C529.391 490.846 541.099 489.76 553.18 502.68C558.804 496.704 562.637 494.323 570.931 493.188Z"></path>
+              <path fill="#314353" d="M639.354 493.202C648.137 491.753 658.376 496.087 664.646 502.166C674.273 511.499 674.31 519.239 674.49 531.745C669.523 531.982 662.66 531.545 657.428 531.471C645.135 531.261 632.838 531.321 620.547 531.654C622.103 537.745 623.824 541.812 629.263 545.759C634.1 549.246 640.132 550.651 646.013 549.661C652.761 548.569 656.987 545.045 660.874 539.739L661.525 538.804C663.652 538.348 669.677 542.692 671.895 544.105C664.69 563.552 635.811 566.36 620.664 554.32C613.911 548.945 609.641 541.049 608.839 532.455C606.802 512.269 618.446 495.104 639.354 493.202ZM621.199 520.864C629.196 520.498 637.974 520.836 646.054 520.801C651.207 520.639 656.945 520.39 662.079 520.436C657.63 510.31 648.98 503.089 637.341 505.213C628.492 508.205 624.163 511.785 621.199 520.864Z"></path>
+              <path fill="#314353" d="M849.523 493.272C861.752 493.673 871.807 495.94 877.908 507.732C874.515 509.762 871.096 511.748 867.651 513.688C863.334 508.124 860.463 505.994 853.116 504.886C846.503 503.888 836.026 506.746 839.003 515.433C840.909 520.996 852.67 521.56 857.634 522.538C868.41 524.661 879.055 528.322 879.162 541.373C879.219 546.191 877.313 550.825 873.882 554.208C867.517 560.564 859.617 561.769 851.146 561.703C840.103 561.31 830.253 558.412 824.774 547.514C824.123 546.219 824.388 545.433 824.853 544.234C827.684 541.913 831.696 540.597 835.164 539.385C839.161 547.138 843.921 550.978 853.121 550.882C858.344 550.827 867.098 547.679 866.462 541.105C862 530.914 825.908 536.617 825.731 515.291C825.603 499.809 835.877 494.15 849.523 493.272Z"></path>
+              <path fill="#314353" d="M177.166 493.215C191.846 492.205 201.317 499.153 209.181 510.711C205.402 513.235 203.167 515.158 198.997 517.668C193.867 511.904 189.52 506.656 181.051 505.66C175.249 505.029 169.444 506.827 165.015 510.627C160.583 514.39 157.679 519.592 157.223 525.448C155.647 545.681 178.953 557.269 193.971 543.441C195.481 541.853 197.059 539.705 198.43 537.946C202.215 539.981 205.487 542.354 208.869 544.976C207.943 546.532 206.672 548.371 205.514 549.773C199.836 556.534 191.726 560.788 182.936 561.618C173.556 562.525 163.861 560.433 156.531 554.28C149.539 548.367 145.21 539.898 144.51 530.768C142.962 510.392 156.936 494.737 177.166 493.215Z"></path>
+              <path fill="#314353" d="M787.609 493.278C800.566 493.716 812.347 498.909 817.573 511.489C813.916 514.118 812.089 515.234 808.073 517.166C807.413 516.344 806.737 515.535 806.045 514.739C797.235 504.648 783.797 501.942 773.415 511.55C769.09 515.554 766.546 521.121 766.35 527.012C765.77 546.842 789.31 557.445 804.823 542.039C805.743 540.7 807.034 539.09 808.035 537.761C810.785 539.357 813.816 541.047 816.456 542.807C817.815 543.712 817.51 543.712 817.692 545.141C817.109 546.942 816.286 548.141 814.981 549.544C807.869 557.039 801.933 560.963 791.41 561.759C758.789 564.229 742.356 528.849 762.771 504.412C769.035 496.913 777.687 493.791 787.609 493.278Z"></path>
+              <path fill="#314353" d="M691.569 473.541L703.75 473.539L703.657 494.726C709.788 494.6 715.919 494.552 722.051 494.582C721.873 498.478 721.982 502.636 722.018 506.559C716.63 506.868 709.419 506.729 703.902 506.779C703.898 516.86 703.399 534.836 704.367 544.248C704.782 544.869 705.212 545.48 705.658 546.079C709.613 551.335 715.965 548.831 721.005 549.521L721.318 550.477C721.394 553.774 721.347 557.255 721.357 560.569C713.015 560.656 702.663 562.039 696.592 555.717C694.592 553.756 692.16 549.668 691.932 546.8C690.923 534.072 691.47 519.269 691.538 506.534L678.839 506.507L679.04 494.454L691.525 494.544C691.337 487.886 691.545 480.273 691.569 473.541Z"></path>
+              <path fill="#314353" d="M478.099 494.453L490.868 494.554C491.19 511.449 490.777 528.467 490.894 545.374C490.924 549.763 491.22 555.554 490.753 559.78L489.861 560.136L478.405 560.358C478.201 542.896 478.464 525.394 478.358 507.929C478.332 503.739 478.673 498.547 478.099 494.453Z"></path>
+              <path fill="#314353" d="M732.028 494.729C735.893 494.994 740.525 494.82 744.454 494.773C744.288 501.631 745.286 558.681 743.865 560.511C739.381 560.313 736.359 560.189 731.918 560.501C732.289 544.897 731.649 528.743 731.834 513.114C731.878 509.452 731.435 497.361 732.028 494.729Z"></path>
+              <path fill="#314353" d="M737.06 466.191C741.999 465.29 746.732 468.569 747.622 473.51C748.512 478.451 745.222 483.176 740.279 484.055C735.352 484.931 730.645 481.654 729.758 476.729C728.871 471.804 732.137 467.09 737.06 466.191Z"></path>
+              <path fill="#314353" d="M483.461 466.202C488.382 465.298 493.105 468.553 494.013 473.473C494.922 478.394 491.671 483.12 486.752 484.033C481.826 484.946 477.093 481.691 476.183 476.764C475.274 471.838 478.533 467.107 483.461 466.202Z"></path>
+            </svg>
+          </div>
+
+          <nav class="hidden md:flex items-center gap-8">
+            <button class="text-sm font-medium text-neutral-600 hover:text-neutral-900 transition-colors bg-transparent border-0 cursor-pointer" id="howItWorksLink">
+              So funktioniert's
+            </button>
+            <button class="text-sm font-medium text-neutral-600 hover:text-neutral-900 transition-colors bg-transparent border-0 cursor-pointer" id="popularProductsLink">
+              Beliebte Produkte
+            </button>
+            <button class="text-sm font-medium text-neutral-600 hover:text-neutral-900 transition-colors bg-transparent border-0 cursor-pointer" id="shopsLink">
+              Partner &amp; Shops
+            </button>
+          </nav>
+
+          <div class="flex items-center gap-3">
+            <button id="cartIconBtn" class="relative p-2 text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 rounded-lg transition-colors">
+              <span class="iconify w-6 h-6" data-icon="lucide:shopping-bag"></span>
+              <span id="cartCountBadge" class="absolute -top-1 -right-1 w-5 h-5 bg-rose-500 text-white text-xs font-medium rounded-full flex items-center justify-center hidden">
+                0
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="flex-grow sm:px-6 lg:px-8 lg:py-12 max-w-7xl w-full mx-auto pt-8 pr-4 pb-8 pl-4">
+      <div class="text-center mb-12">
+        <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-rose-50 text-rose-700 text-xs font-medium rounded-full mb-4">
+          <span class="iconify w-3.5 h-3.5" data-icon="lucide:zap"></span>
+          Smarte Warenkorb-Optimierung
+        </div>
+        <h1 class="text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight text-neutral-900 mb-4">
+          Finde den günstigsten Weg,
+          <br class="hidden sm:block">
+          deine Beauty-Essentials zu kaufen
+        </h1>
+        <p class="text-base sm:text-lg text-neutral-500 max-w-2xl mx-auto">
+          Vergleiche Preise über mehrere Shops und optimiere deinen Warenkorb
+          für maximale Ersparnis, inklusive Versandkosten.
+        </p>
+      </div>
+
+      <div class="max-w-2xl mx-auto mb-12">
+        <div class="relative">
+          <span class="iconify absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" data-icon="lucide:search"></span>
+          <input type="text" id="searchInput" placeholder="Suche nach CeraVe, The Ordinary..." class="w-full pl-12 pr-4 py-4 bg-white border border-neutral-200 rounded-xl text-base text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all">
+          <button id="searchBtn" class="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-2 bg-neutral-900 text-white text-sm font-medium rounded-lg hover:bg-neutral-800 transition-colors">
+            Suchen
+          </button>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2 mt-4">
+          <span class="text-xs text-neutral-500">Beliebt:</span>
+          <button class="quick-tag px-3 py-1.5 bg-white border border-neutral-200 text-xs font-medium text-neutral-600 rounded-full hover:border-neutral-300 hover:bg-neutral-50 transition-colors">
+            Ordinary
+          </button>
+          <button class="quick-tag px-3 py-1.5 bg-white border border-neutral-200 text-xs font-medium text-neutral-600 rounded-full hover:border-neutral-300 hover:bg-neutral-50 transition-colors">
+            CeraVe
+          </button>
+          <button class="quick-tag px-3 py-1.5 bg-white border border-neutral-200 text-xs font-medium text-neutral-600 rounded-full hover:border-neutral-300 hover:bg-neutral-50 transition-colors">
+            Paula's Choice
+          </button>
+        </div>
+      </div>
+
+      <div class="grid lg:grid-cols-3 gap-8">
+        
+        <div class="lg:col-span-2">
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-lg font-semibold tracking-tight text-neutral-900">
+              Suchergebnisse
+            </h2>
+          </div>
+
+          <div id="productsGrid" class="grid sm:grid-cols-2 gap-4"></div>
+
+          <div id="emptyState" class="hidden bg-white border border-neutral-200 rounded-xl p-12 text-center">
+            <div class="w-16 h-16 bg-neutral-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span class="iconify w-8 h-8 text-neutral-400" data-icon="lucide:search"></span>
+            </div>
+            <h3 class="text-base font-medium text-neutral-900 mb-2">
+              Keine Produkte gefunden
+            </h3>
+            <p class="text-sm text-neutral-500">
+              Versuche "CeraVe" oder "Dior" zu suchen.
+            </p>
+          </div>
+        </div>
+
+        <div id="basketSidebar" class="hidden lg:block lg:col-span-1">
+          <div class="bg-white border border-neutral-200 rounded-xl sticky top-24 shadow-sm">
+            <div class="p-5 border-b border-neutral-100 flex items-center justify-between">
+              <h2 class="text-base font-semibold text-neutral-900">
+                Dein Warenkorb
+              </h2>
+              <button id="clearBasket" class="text-xs text-neutral-500 hover:text-rose-600 transition-colors">
+                Alle löschen
+              </button>
+            </div>
+
+            <div id="basketItems" class="p-5 max-h-64 overflow-y-auto">
+              <div id="basketEmpty" class="text-center py-8">
+                <div class="w-12 h-12 bg-neutral-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <span class="iconify w-6 h-6 text-neutral-400" data-icon="lucide:shopping-bag"></span>
+                </div>
+                <p class="text-sm text-neutral-500">
+                  Füge Produkte hinzu zum Vergleichen
+                </p>
+              </div>
+              <div id="basketList" class="space-y-3 hidden"></div>
+            </div>
+
+            <div id="optimizationSection" class="border-t border-neutral-100 p-5 hidden bg-neutral-50/50">
+              <div class="flex items-center gap-2 mb-4">
+                <span class="iconify w-4 h-4 text-emerald-600" data-icon="lucide:sparkles"></span>
+                <span class="text-sm font-medium text-neutral-900">
+                  Beste Option gefunden
+                </span>
+              </div>
+
+              <div id="optionsList" class="space-y-3 mb-4"></div>
+
+              <div class="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-lg p-4 mt-4 border border-emerald-100">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-sm text-neutral-600">
+                    Bester Gesamtpreis
+                  </span>
+                  <span id="bestPrice" class="text-lg font-bold text-emerald-700">
+                    €0.00
+                  </span>
+                </div>
+                <div class="flex items-center justify-between text-xs text-neutral-500">
+                  <span>Inkl. Versand</span>
+                  <span id="savings" class="text-emerald-600 font-medium bg-emerald-100 px-2 py-0.5 rounded-full">
+                    Save €0.00
+                  </span>
+                </div>
+              </div>
+
+              <button class="w-full mt-4 py-3 bg-neutral-900 text-white text-sm font-medium rounded-lg hover:bg-neutral-800 transition-colors flex items-center justify-center gap-2 shadow-lg shadow-neutral-200">
+                <span class="iconify w-4 h-4" data-icon="lucide:external-link"></span>
+                Zum besten Angebot
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="shopComparison" class="mt-12 hidden">
+        <h2 class="text-lg font-semibold tracking-tight text-neutral-900 mb-6">
+          Detaillierter Vergleich
+        </h2>
+        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4" id="shopCards"></div>
+      </div>
+    </main>
+
+    <footer class="bg-neutral-900 text-white mt-auto">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div>
+            <div class="flex items-center gap-2 mb-4">
+              <div class="h-10 w-auto flex items-center justify-center bg-white rounded-lg p-1">
+                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" class="h-full w-auto">
+                  <path fill="#314353" d="M400.516 467.016C404.824 466.961 409.133 466.969 413.442 467.038C412.838 477.505 413.085 490.91 413.276 501.4C419.157 496.894 425.022 493.711 432.572 493.079C441.424 492.322 450.21 495.135 456.976 500.892C472.266 513.892 472.695 536.28 459.91 551.137C447.289 564.782 427.995 564.828 413.323 554.532L413.425 560.539C408.363 560.252 405.564 560.165 400.502 560.499L400.667 500.827C400.694 491.552 401.265 475.764 400.516 467.016ZM437.232 549.403C449.333 548.066 458.024 537.118 456.579 525.029C455.135 512.939 444.111 504.347 432.035 505.898C420.109 507.43 411.646 518.287 413.072 530.226C414.498 542.165 425.281 550.724 437.232 549.403Z"></path>
+                  <path fill="#314353" d="M704.053 365.892C724.21 363.221 742.766 377.26 745.678 397.384C748.589 417.508 734.771 436.23 714.683 439.381C701.474 441.452 688.172 436.262 679.856 425.792C671.541 415.322 669.497 401.19 674.504 388.793C679.512 376.396 690.798 367.649 704.053 365.892Z"></path>
+                  <path fill="#ACB8BC" d="M703.046 368.84C721.892 365.568 739.791 378.289 742.898 397.164C746.005 416.038 733.128 433.825 714.227 436.767C695.559 439.673 678.038 426.988 674.969 408.346C671.9 389.704 684.431 372.072 703.046 368.84Z"></path>
+                  <path fill="#314353" d="M641.885 411.802C661.542 409.767 679.125 424.053 681.158 443.709C683.192 463.366 668.905 480.948 649.249 482.981C629.594 485.013 612.012 470.728 609.979 451.073C607.946 431.418 622.23 413.836 641.885 411.802ZM648.748 480.164C666.823 478.416 680.07 462.364 678.355 444.286C676.641 426.208 660.613 412.932 642.532 414.613C624.404 416.298 611.085 432.377 612.804 450.502C614.523 468.627 630.626 481.916 648.748 480.164Z"></path>
+                  <path fill="#314353" d="M242.713 493.36C261.391 490.219 279.11 502.72 282.416 521.369C285.723 540.019 273.381 557.849 254.761 561.321C235.906 564.837 217.801 552.304 214.453 533.418C211.105 514.532 223.798 496.54 242.713 493.36ZM250.253 558.752C267.604 557.712 280.795 542.753 279.657 525.409C278.518 508.065 263.484 494.959 246.147 496.196C228.949 497.423 215.971 512.31 217.1 529.515C218.229 546.72 233.042 559.783 250.253 558.752Z"></path>
+                  <path fill="#314353" d="M317.232 493.578C328.324 492.836 334.872 494.086 341.746 503.418C342.312 502.767 342.89 502.126 343.481 501.497C353.323 491.086 370.947 490.338 381.314 500.22C390.247 508.733 389.471 521.308 389.432 532.574C389.4 541.886 389.328 551.207 389.28 560.521L376.504 560.548L376.603 534.017C376.607 522.874 378.438 505.731 362.413 505.478C358.426 505.43 354.595 507.023 351.819 509.885C345.367 516.425 346.852 528.249 346.951 537.113L346.989 560.509C342.789 560.351 338.586 560.352 334.387 560.511C333.669 547.077 334.685 533.623 333.978 519.972C333.304 506.931 319.357 501.51 309.82 509.945C303.949 515.138 304.654 524.984 304.736 532.202C304.841 541.559 304.866 551.055 304.859 560.49C300.257 560.299 296.582 560.095 291.953 560.477C292.424 539.134 292.051 515.829 291.94 494.356L304.52 494.436L304.645 500.448C309.176 495.977 311.108 494.997 317.232 493.578Z"></path>
+                  <path fill="#314353" d="M570.931 493.188C578.601 492.557 586.149 494.02 591.881 499.54C595.116 502.673 597.444 506.623 598.618 510.971C600.883 519.149 599.876 549.722 600.044 560.431L587.346 560.485C586.644 546.727 588.875 526.49 585.623 513.567C584.544 509.281 578.119 506.569 574.039 505.167C556.094 508.105 558.107 519.88 558.091 534.244C558.025 542.966 558.049 551.688 558.164 560.409C553.688 560.279 550.182 560.159 545.689 560.505L545.776 535.125C545.772 527.473 546.734 516.276 541.702 510.392C539.226 507.546 535.68 505.855 531.911 505.723C525.353 505.456 517.931 511.189 516.493 517.35C515.376 522.132 515.814 530.048 515.839 535.089C515.894 543.507 515.887 551.925 515.82 560.343C511.712 560.418 507.517 560.271 503.403 560.176C502.594 539.434 503.012 515.467 503.136 494.612L515.577 494.498L515.596 500.303C529.391 490.846 541.099 489.76 553.18 502.68C558.804 496.704 562.637 494.323 570.931 493.188Z"></path>
+                  <path fill="#314353" d="M639.354 493.202C648.137 491.753 658.376 496.087 664.646 502.166C674.273 511.499 674.31 519.239 674.49 531.745C669.523 531.982 662.66 531.545 657.428 531.471C645.135 531.261 632.838 531.321 620.547 531.654C622.103 537.745 623.824 541.812 629.263 545.759C634.1 549.246 640.132 550.651 646.013 549.661C652.761 548.569 656.987 545.045 660.874 539.739L661.525 538.804C663.652 538.348 669.677 542.692 671.895 544.105C664.69 563.552 635.811 566.36 620.664 554.32C613.911 548.945 609.641 541.049 608.839 532.455C606.802 512.269 618.446 495.104 639.354 493.202ZM621.199 520.864C629.196 520.498 637.974 520.836 646.054 520.801C651.207 520.639 656.945 520.39 662.079 520.436C657.63 510.31 648.98 503.089 637.341 505.213C628.492 508.205 624.163 511.785 621.199 520.864Z"></path>
+                  <path fill="#314353" d="M849.523 493.272C861.752 493.673 871.807 495.94 877.908 507.732C874.515 509.762 871.096 511.748 867.651 513.688C863.334 508.124 860.463 505.994 853.116 504.886C846.503 503.888 836.026 506.746 839.003 515.433C840.909 520.996 852.67 521.56 857.634 522.538C868.41 524.661 879.055 528.322 879.162 541.373C879.219 546.191 877.313 550.825 873.882 554.208C867.517 560.564 859.617 561.769 851.146 561.703C840.103 561.31 830.253 558.412 824.774 547.514C824.123 546.219 824.388 545.433 824.853 544.234C827.684 541.913 831.696 540.597 835.164 539.385C839.161 547.138 843.921 550.978 853.121 550.882C858.344 550.827 867.098 547.679 866.462 541.105C862 530.914 825.908 536.617 825.731 515.291C825.603 499.809 835.877 494.15 849.523 493.272Z"></path>
+                  <path fill="#314353" d="M177.166 493.215C191.846 492.205 201.317 499.153 209.181 510.711C205.402 513.235 203.167 515.158 198.997 517.668C193.867 511.904 189.52 506.656 181.051 505.66C175.249 505.029 169.444 506.827 165.015 510.627C160.583 514.39 157.679 519.592 157.223 525.448C155.647 545.681 178.953 557.269 193.971 543.441C195.481 541.853 197.059 539.705 198.43 537.946C202.215 539.981 205.487 542.354 208.869 544.976C207.943 546.532 206.672 548.371 205.514 549.773C199.836 556.534 191.726 560.788 182.936 561.618C173.556 562.525 163.861 560.433 156.531 554.28C149.539 548.367 145.21 539.898 144.51 530.768C142.962 510.392 156.936 494.737 177.166 493.215Z"></path>
+                  <path fill="#314353" d="M787.609 493.278C800.566 493.716 812.347 498.909 817.573 511.489C813.916 514.118 812.089 515.234 808.073 517.166C807.413 516.344 806.737 515.535 806.045 514.739C797.235 504.648 783.797 501.942 773.415 511.55C769.09 515.554 766.546 521.121 766.35 527.012C765.77 546.842 789.31 557.445 804.823 542.039C805.743 540.7 807.034 539.09 808.035 537.761C810.785 539.357 813.816 541.047 816.456 542.807C817.815 543.712 817.51 543.712 817.692 545.141C817.109 546.942 816.286 548.141 814.981 549.544C807.869 557.039 801.933 560.963 791.41 561.759C758.789 564.229 742.356 528.849 762.771 504.412C769.035 496.913 777.687 493.791 787.609 493.278Z"></path>
+                  <path fill="#314353" d="M691.569 473.541L703.75 473.539L703.657 494.726C709.788 494.6 715.919 494.552 722.051 494.582C721.873 498.478 721.982 502.636 722.018 506.559C716.63 506.868 709.419 506.729 703.902 506.779C703.898 516.86 703.399 534.836 704.367 544.248C704.782 544.869 705.212 545.48 705.658 546.079C709.613 551.335 715.965 548.831 721.005 549.521L721.318 550.477C721.394 553.774 721.347 557.255 721.357 560.569C713.015 560.656 702.663 562.039 696.592 555.717C694.592 553.756 692.16 549.668 691.932 546.8C690.923 534.072 691.47 519.269 691.538 506.534L678.839 506.507L679.04 494.454L691.525 494.544C691.337 487.886 691.545 480.273 691.569 473.541Z"></path>
+                  <path fill="#314353" d="M478.099 494.453L490.868 494.554C491.19 511.449 490.777 528.467 490.894 545.374C490.924 549.763 491.22 555.554 490.753 559.78L489.861 560.136L478.405 560.358C478.201 542.896 478.464 525.394 478.358 507.929C478.332 503.739 478.673 498.547 478.099 494.453Z"></path>
+                  <path fill="#314353" d="M732.028 494.729C735.893 494.994 740.525 494.82 744.454 494.773C744.288 501.631 745.286 558.681 743.865 560.511C739.381 560.313 736.359 560.189 731.918 560.501C732.289 544.897 731.649 528.743 731.834 513.114C731.878 509.452 731.435 497.361 732.028 494.729Z"></path>
+                  <path fill="#314353" d="M737.06 466.191C741.999 465.29 746.732 468.569 747.622 473.51C748.512 478.451 745.222 483.176 740.279 484.055C735.352 484.931 730.645 481.654 729.758 476.729C728.871 471.804 732.137 467.09 737.06 466.191Z"></path>
+                  <path fill="#314353" d="M483.461 466.202C488.382 465.298 493.105 468.553 494.013 473.473C494.922 478.394 491.671 483.12 486.752 484.033C481.826 484.946 477.093 481.691 476.183 476.764C475.274 471.838 478.533 467.107 483.461 466.202Z"></path>
+                </svg>
+              </div>
+            </div>
+            <p class="text-sm text-neutral-400">
+              Vergleiche smarter, spare mehr.
+            </p>
+          </div>
+          <div>
+            <h3 class="text-sm font-semibold mb-4">Rechtliches</h3>
+            <ul class="space-y-2 text-sm text-neutral-400">
+              <li><a href="#" class="hover:text-white transition-colors">Impressum</a></li>
+              <li><a href="#" class="hover:text-white transition-colors">Datenschutz</a></li>
+              <li><a href="#" class="hover:text-white transition-colors">AGB</a></li>
+              <li><a href="#" class="hover:text-white transition-colors">Widerrufsrecht</a></li>
+            </ul>
+          </div>
+          <div>
+            <h3 class="text-sm font-semibold mb-4">Service</h3>
+            <ul class="space-y-2 text-sm text-neutral-400">
+              <li><a href="#" class="hover:text-white transition-colors">Kontakt</a></li>
+              <li><a href="#" class="hover:text-white transition-colors">Über uns</a></li>
+              <li><a href="#" class="hover:text-white transition-colors">FAQ</a></li>
+            </ul>
+          </div>
+        </div>
+        <div class="border-t border-neutral-800 mt-8 pt-8 text-center">
+          <p class="text-xs text-neutral-500">
+            © 2026 Combimetics Deutschland
+          </p>
+        </div>
+      </div>
+    </footer>
+
+    <div id="cartOverlay" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="document.getElementById('cartOverlay').classList.add('hidden')"></div>
+        <div class="absolute right-0 top-0 bottom-0 w-full sm:w-96 bg-white shadow-2xl flex flex-col cart-drawer cart-drawer-open">
+            <div class="p-5 border-b border-neutral-100 flex items-center justify-between">
+                <h2 class="text-lg font-semibold text-neutral-900">Dein Warenkorb</h2>
+                <button onclick="document.getElementById('cartOverlay').classList.add('hidden')" class="p-2 text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 rounded-lg">
+                    <span class="iconify w-6 h-6" data-icon="lucide:x"></span>
+                </button>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto p-5">
+                <div id="mobileBasketItems" class="space-y-4">
+                    </div>
+                <div id="mobileBasketEmpty" class="text-center py-12">
+                    <div class="w-16 h-16 bg-neutral-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="iconify w-8 h-8 text-neutral-400" data-icon="lucide:shopping-cart"></span>
+                    </div>
+                    <p class="text-neutral-500">Dein Warenkorb ist leer.</p>
+                </div>
+            </div>
+
+            <div class="p-5 border-t border-neutral-100 bg-neutral-50">
+                <button onclick="document.getElementById('cartOverlay').classList.add('hidden'); document.getElementById('optimizationSection').scrollIntoView({behavior: 'smooth'})" class="w-full py-3 bg-neutral-900 text-white text-sm font-medium rounded-lg hover:bg-neutral-800 transition-colors shadow-lg">
+                    Zur Preisoptimierung
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="howItWorksModal" class="modal-overlay fixed inset-0 hidden items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative">
+        <button id="closeHowItWorks" class="absolute top-4 right-4 p-2 text-neutral-400 hover:text-neutral-600 rounded-lg hover:bg-neutral-100 transition-colors">
+          <span class="iconify w-5 h-5" data-icon="lucide:x"></span>
+        </button>
+        <div class="text-center mb-6">
+          <div class="w-12 h-12 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span class="iconify w-6 h-6 text-rose-600" data-icon="lucide:sparkles"></span>
+          </div>
+          <h3 class="text-xl font-semibold tracking-tight text-neutral-900 mb-2">
+            So funktioniert's
+          </h3>
+        </div>
+        <p class="text-neutral-600 text-center leading-relaxed">
+          Wir vergleichen nicht nur Einzelpreise. Wir berechnen die günstigste
+          Kombination für deinen gesamten Warenkorb inklusive Versandkosten.
+        </p>
+        <button id="closeHowItWorksBtn" class="w-full mt-6 py-3 bg-neutral-900 text-white text-sm font-medium rounded-lg hover:bg-neutral-800 transition-colors">
+          Verstanden
+        </button>
+      </div>
+    </div>
+
+    <div id="shopsModal" class="modal-overlay fixed inset-0 hidden items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 relative">
+        <button id="closeShops" class="absolute top-4 right-4 p-2 text-neutral-400 hover:text-neutral-600 rounded-lg hover:bg-neutral-100 transition-colors">
+          <span class="iconify w-5 h-5" data-icon="lucide:x"></span>
+        </button>
+        <div class="text-center mb-6">
+          <div class="w-12 h-12 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span class="iconify w-6 h-6 text-rose-600" data-icon="lucide:store"></span>
+          </div>
+          <h3 class="text-xl font-semibold tracking-tight text-neutral-900 mb-2">
+            Partner &amp; Shops
+          </h3>
+          <p class="text-sm text-neutral-500">
+            Wir vergleichen Preise bei diesen Shops
+          </p>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+          <div class="p-4 bg-neutral-50 rounded-xl text-center">
+            <div class="w-10 h-10 bg-rose-500 rounded-lg flex items-center justify-center mx-auto mb-2">
+              <span class="text-white text-sm font-semibold">D</span>
+            </div>
+            <span class="text-sm font-medium text-neutral-700">Douglas</span>
+          </div>
+          <div class="p-4 bg-neutral-50 rounded-xl text-center">
+            <div class="w-10 h-10 bg-neutral-900 rounded-lg flex items-center justify-center mx-auto mb-2">
+              <span class="text-white text-sm font-semibold">S</span>
+            </div>
+            <span class="text-sm font-medium text-neutral-700">Sephora</span>
+          </div>
+          <div class="p-4 bg-neutral-50 rounded-xl text-center">
+            <div class="w-10 h-10 bg-pink-500 rounded-lg flex items-center justify-center mx-auto mb-2">
+              <span class="text-white text-sm font-semibold">F</span>
+            </div>
+            <span class="text-sm font-medium text-neutral-700">Flaconi</span>
+          </div>
+          <div class="p-4 bg-neutral-50 rounded-xl text-center">
+            <div class="w-10 h-10 bg-amber-500 rounded-lg flex items-center justify-center mx-auto mb-2">
+              <span class="text-white text-sm font-semibold">N</span>
+            </div>
+            <span class="text-sm font-medium text-neutral-700">Notino</span>
+          </div>
+          <div class="p-4 bg-neutral-50 rounded-xl text-center">
+            <div class="w-10 h-10 bg-emerald-500 rounded-lg flex items-center justify-center mx-auto mb-2">
+              <span class="text-white text-sm font-semibold">SA</span>
+            </div>
+            <span class="text-sm font-medium text-neutral-700">
+              Shop Apotheke
+            </span>
+          </div>
+        </div>
+        <button id="closeShopsBtn" class="w-full mt-6 py-3 bg-neutral-900 text-white text-sm font-medium rounded-lg hover:bg-neutral-800 transition-colors">
+          Schließen
+        </button>
+      </div>
+    </div>
+
+    <script>
+      // Wir warten, bis der DOM (die HTML Struktur) komplett geladen ist
+      document.addEventListener("DOMContentLoaded", () => {
+        
+        // 1. DATA Setup
+        const mockProducts = [
+            { id: 1, ean: '0769915190878', name: 'The Ordinary Niacinamide 10% + Zinc 1%', brand: 'The Ordinary', trending: true, image: 'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=200&h=200&fit=crop', prices: [
+                { shop: 'Douglas', price: 6.90, shipping: 3.95 },
+                { shop: 'Sephora', price: 7.50, shipping: 4.95 },
+                { shop: 'Flaconi', price: 6.50, shipping: 3.95 }
+            ]},
+            { id: 2, ean: '3337875597395', name: 'La Roche-Posay Effaclar Duo+', brand: 'La Roche-Posay', trending: false, image: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=200&h=200&fit=crop', prices: [
+                { shop: 'Douglas', price: 18.90, shipping: 3.95 },
+                { shop: 'Sephora', price: 19.50, shipping: 4.95 },
+                { shop: 'Notino', price: 16.90, shipping: 2.95 }
+            ]},
+            { id: 3, ean: '3614272049529', name: 'CeraVe Moisturizing Cream 454g', brand: 'CeraVe', trending: true, image: 'https://images.unsplash.com/photo-1611930022073-b7a4ba5fcccd?w=200&h=200&fit=crop', prices: [
+                { shop: 'Douglas', price: 16.90, shipping: 3.95 },
+                { shop: 'Flaconi', price: 15.90, shipping: 3.95 },
+                { shop: 'Notino', price: 14.50, shipping: 2.95 }
+            ]},
+            { id: 4, ean: '773602355280', name: 'MAC Matte Lipstick - Ruby Woo', brand: 'MAC', trending: true, image: 'https://images.unsplash.com/photo-1586495777744-4413f21062fa?w=200&h=200&fit=crop', prices: [
+                { shop: 'Douglas', price: 24.00, shipping: 3.95 },
+                { shop: 'Sephora', price: 24.00, shipping: 4.95 },
+                { shop: 'Flaconi', price: 23.50, shipping: 3.95 }
+            ]},
+            { id: 5, ean: '0607845080910', name: 'Paula\'s Choice 2% BHA Liquid Exfoliant', brand: 'Paula\'s Choice', trending: false, image: 'https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?w=200&h=200&fit=crop', prices: [
+                { shop: 'Douglas', price: 35.00, shipping: 3.95 },
+                { shop: 'Sephora', price: 36.00, shipping: 4.95 },
+                { shop: 'Flaconi', price: 34.00, shipping: 3.95 }
+            ]},
+            { id: 6, ean: '3348901419864', name: 'Dior Addict Lip Glow', brand: 'Dior', trending: true, image: 'https://images.unsplash.com/photo-1631214524020-7e18db9a8f92?w=200&h=200&fit=crop', prices: [
+                { shop: 'Douglas', price: 38.50, shipping: 3.95 },
+                { shop: 'Sephora', price: 39.00, shipping: 4.95 },
+                { shop: 'Flaconi', price: 37.90, shipping: 3.95 }
+            ]}
+        ];
+
+        const shops = {
+            'Douglas': { color: 'bg-rose-500', shipping: 3.95, freeShippingThreshold: 24.95 },
+            'Sephora': { color: 'bg-neutral-900', shipping: 4.95, freeShippingThreshold: 30 },
+            'Flaconi': { color: 'bg-pink-500', shipping: 3.95, freeShippingThreshold: 19 },
+            'Notino': { color: 'bg-amber-500', shipping: 2.95, freeShippingThreshold: 25 },
+            'Shop Apotheke': { color: 'bg-emerald-500', shipping: 0, freeShippingThreshold: 29 }
+        };
+
+        let basket = [];
+        let displayedProducts = [...mockProducts];
+
+        // 2. DOM Elements
+        const productsGrid = document.getElementById('productsGrid');
+        const emptyState = document.getElementById('emptyState');
+        const searchInput = document.getElementById('searchInput');
+        const searchBtn = document.getElementById('searchBtn');
+        
+        // Desktop Sidebar Elements
+        const basketEmpty = document.getElementById('basketEmpty');
+        const basketList = document.getElementById('basketList');
+        const cartCountBadge = document.getElementById('cartCountBadge');
+        const clearBasket = document.getElementById('clearBasket');
+        const optimizationSection = document.getElementById('optimizationSection');
+        const optionsList = document.getElementById('optionsList');
+        const bestPrice = document.getElementById('bestPrice');
+        const savings = document.getElementById('savings');
+        const shopComparison = document.getElementById('shopComparison');
+        const shopCards = document.getElementById('shopCards');
+        
+        // Mobile Overlay Elements
+        const cartOverlay = document.getElementById('cartOverlay');
+        const mobileBasketItems = document.getElementById('mobileBasketItems');
+        const mobileBasketEmpty = document.getElementById('mobileBasketEmpty');
+        
+        // Modals & Links
+        const howItWorksModal = document.getElementById('howItWorksModal');
+        const shopsModal = document.getElementById('shopsModal');
+        const howItWorksLink = document.getElementById('howItWorksLink');
+        const popularProductsLink = document.getElementById('popularProductsLink');
+        const shopsLink = document.getElementById('shopsLink');
+        const cartIconBtn = document.getElementById('cartIconBtn');
+
+        // 3. RENDER Functions
+        function renderProducts(products) {
+            if (products.length === 0) {
+                productsGrid.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            productsGrid.classList.remove('hidden');
+            emptyState.classList.add('hidden');
+
+            productsGrid.innerHTML = products.map(product => {
+                const lowestPrice = Math.min(...product.prices.map(p => p.price));
+                const highestPrice = Math.max(...product.prices.map(p => p.price));
+                const inBasket = basket.find(b => b.id === product.id);
+
+                return `
+                    <div class="bg-white border border-neutral-200 rounded-xl p-4 hover:border-neutral-300 hover:shadow-md transition-all group">
+                        <div class="flex gap-4">
+                            <div class="w-20 h-20 bg-neutral-100 rounded-lg overflow-hidden flex-shrink-0">
+                                <img src="${product.image}" alt="${product.name}" class="w-full h-full object-cover">
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-xs text-neutral-500 mb-1 font-semibold uppercase">${product.brand}</p>
+                                <h3 class="text-sm font-medium text-neutral-900 line-clamp-2 mb-2">${product.name}</h3>
+                                <div class="flex items-baseline gap-2">
+                                    <span class="text-base font-bold text-neutral-900">ab €${lowestPrice.toFixed(2)}</span>
+                                    ${highestPrice > lowestPrice ? `<span class="text-xs text-neutral-400 line-through">€${highestPrice.toFixed(2)}</span>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 mt-4">
+                            <button onclick="window.toggleBasket(${product.id})" class="flex-1 py-2 px-4 rounded-lg transition-all flex items-center justify-center gap-2 ${inBasket ? 'bg-rose-500 text-white shadow-md shadow-rose-200' : 'bg-neutral-900 text-white hover:bg-neutral-800'}">
+                                <span class="iconify w-4 h-4" data-icon="${inBasket ? 'lucide:check' : 'lucide:plus'}"></span>
+                                ${inBasket ? 'Hinzugefügt' : 'In den Warenkorb'}
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderBasket() {
+            // Update Badge
+            if (basket.length > 0) {
+                cartCountBadge.classList.remove('hidden');
+                cartCountBadge.textContent = basket.length;
+            } else {
+                cartCountBadge.classList.add('hidden');
+            }
+
+            // --- Render DESKTOP Sidebar ---
+            if (basket.length === 0) {
+                basketEmpty.classList.remove('hidden');
+                basketList.classList.add('hidden');
+                optimizationSection.classList.add('hidden');
+                shopComparison.classList.add('hidden');
+            } else {
+                basketEmpty.classList.add('hidden');
+                basketList.classList.remove('hidden');
+                basketList.innerHTML = generateBasketHTML(basket);
+                calculateOptimization();
+            }
+
+            // --- Render MOBILE Overlay ---
+            if (basket.length === 0) {
+                mobileBasketEmpty.classList.remove('hidden');
+                mobileBasketItems.innerHTML = '';
+            } else {
+                mobileBasketEmpty.classList.add('hidden');
+                mobileBasketItems.innerHTML = generateBasketHTML(basket);
+            }
+        }
+
+        function generateBasketHTML(currentBasket) {
+            return currentBasket.map(product => {
+                const lowestPrice = Math.min(...product.prices.map(p => p.price));
+                return `
+                    <div class="flex items-center gap-3 p-3 bg-white border border-neutral-100 rounded-lg shadow-sm">
+                        <div class="w-10 h-10 bg-neutral-100 rounded-lg overflow-hidden flex-shrink-0">
+                            <img src="${product.image}" alt="${product.name}" class="w-full h-full object-cover">
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-xs font-medium text-neutral-900 truncate">${product.name}</p>
+                            <p class="text-xs text-neutral-500">ab €${lowestPrice.toFixed(2)}</p>
+                        </div>
+                        <button onclick="window.toggleBasket(${product.id})" class="p-1.5 text-neutral-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors">
+                            <span class="iconify w-4 h-4" data-icon="lucide:trash-2"></span>
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 4. LOGIC Functions
+        window.toggleBasket = function(productId) {
+            const product = mockProducts.find(p => p.id === productId);
+            const index = basket.findIndex(b => b.id === productId);
+
+            if (index > -1) {
+                basket.splice(index, 1);
+            } else {
+                basket.push(product);
+            }
+
+            renderProducts(displayedProducts);
+            renderBasket();
+        }
+
+        function calculateOptimization() {
+            if (basket.length < 1) return;
+
+            optimizationSection.classList.remove('hidden');
+            shopComparison.classList.remove('hidden');
+
+            const allShops = Object.keys(shops);
+            const shopTotals = allShops.map(shopName => {
+                let subtotal = 0;
+                let missingCount = 0;
+
+                basket.forEach(item => {
+                    const deal = item.prices.find(p => p.shop === shopName);
+                    if (deal) {
+                        subtotal += deal.price;
+                    } else {
+                        missingCount++;
+                    }
+                });
+
+                if (missingCount > 0) return null;
+
+                const shopRules = shops[shopName];
+                const shipping = subtotal >= shopRules.freeShippingThreshold ? 0 : shopRules.shipping;
+
+                return {
+                    type: 'single',
+                    label: `Alles bei ${shopName}`,
+                    shop: shopName,
+                    subtotal: subtotal,
+                    shipping: shipping,
+                    total: subtotal + shipping,
+                    isSplit: false
+                };
+            }).filter(Boolean);
+
+            let splitSubtotal = 0;
+            let splitShipping = 0;
+            const shopBuckets = {};
+
+            basket.forEach(item => {
+                const bestDeal = item.prices.reduce((min, p) => p.price < min.price ? p : min, item.prices[0]);
+                if (!shopBuckets[bestDeal.shop]) shopBuckets[bestDeal.shop] = 0;
+                shopBuckets[bestDeal.shop] += bestDeal.price;
+            });
+
+            Object.keys(shopBuckets).forEach(shopName => {
+                 const amount = shopBuckets[shopName];
+                 const rules = shops[shopName];
+                 splitSubtotal += amount;
+                 if (amount < rules.freeShippingThreshold) {
+                     splitShipping += rules.shipping;
+                 }
+            });
+
+            const splitOption = {
+                type: 'split',
+                label: 'Smarte Aufteilung',
+                shop: 'Mehrere Shops',
+                subtotal: splitSubtotal,
+                shipping: splitShipping,
+                total: splitSubtotal + splitShipping,
+                isSplit: true
+            };
+
+            const allOptions = [splitOption, ...shopTotals].sort((a, b) => a.total - b.total);
+            const winner = allOptions[0];
+            const loser = allOptions[allOptions.length - 1];
+
+            optionsList.innerHTML = `
+                <div class="p-3 rounded-lg border border-emerald-200 bg-white">
+                    <div class="flex items-center gap-2 mb-2">
+                         <span class="iconify w-4 h-4 ${winner.isSplit ? 'text-rose-500' : 'text-emerald-600'}" data-icon="${winner.isSplit ? 'lucide:split' : 'lucide:package'}"></span>
+                         <span class="text-sm font-semibold text-neutral-900">${winner.label}</span>
+                    </div>
+                    <div class="flex justify-between text-xs text-neutral-500">
+                        <span>Produkte: €${winner.subtotal.toFixed(2)}</span>
+                        <span>Versand: €${winner.shipping.toFixed(2)}</span>
+                    </div>
+                    <div class="mt-2 pt-2 border-t border-neutral-100 flex justify-between font-bold text-neutral-900">
+                        <span>Gesamt</span>
+                        <span>€${winner.total.toFixed(2)}</span>
+                    </div>
+                </div>
+            `;
+
+            bestPrice.textContent = `€${winner.total.toFixed(2)}`;
+            const savingsAmount = loser ? (loser.total - winner.total) : 0;
+            if (savingsAmount > 0.1) {
+                savings.textContent = `Spare €${savingsAmount.toFixed(2)}`;
+                savings.parentElement.classList.remove('invisible');
+            } else {
+                savings.textContent = "Bestes Angebot";
+            }
+
+            renderComparisonTable(allOptions);
+        }
+
+        function renderComparisonTable(options) {
+            shopCards.innerHTML = options.map((opt, idx) => {
+                const isWinner = idx === 0;
+                return `
+                    <div class="bg-white border ${isWinner ? 'border-emerald-500 ring-2 ring-emerald-500 ring-offset-2' : 'border-neutral-200'} rounded-xl p-5 flex flex-col">
+                        <div class="mb-4">
+                            <h3 class="text-lg font-bold text-neutral-900">${opt.shop}</h3>
+                            <span class="text-xs text-neutral-500">${opt.isSplit ? 'Optimierte Kombination' : 'Ein Paket'}</span>
+                        </div>
+                        <div class="space-y-2 mb-4 flex-1">
+                            <div class="flex justify-between text-sm">
+                                <span class="text-neutral-500">Artikel</span>
+                                <span>€${opt.subtotal.toFixed(2)}</span>
+                            </div>
+                            <div class="flex justify-between text-sm">
+                                <span class="text-neutral-500">Versand</span>
+                                <span class="${opt.shipping === 0 ? 'text-emerald-600 font-medium' : ''}">${opt.shipping === 0 ? 'Kostenlos' : '€'+opt.shipping.toFixed(2)}</span>
+                            </div>
+                        </div>
+                        <div class="pt-4 border-t border-neutral-100">
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm font-medium text-neutral-900">Gesamt</span>
+                                <span class="text-xl font-bold ${isWinner ? 'text-emerald-600' : 'text-neutral-900'}">€${opt.total.toFixed(2)}</span>
+                            </div>
+                        </div>
+                        ${isWinner ? '<div class="mt-3 text-center text-xs font-bold text-white bg-emerald-500 py-1 rounded">GÜNSTIGSTE OPTION</div>' : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 5. SEARCH Functionality
+        function handleSearch() {
+            const query = searchInput.value.toLowerCase().trim();
+            if (query === '') {
+                displayedProducts = [...mockProducts];
+            } else {
+                displayedProducts = mockProducts.filter(p =>
+                    p.name.toLowerCase().includes(query) ||
+                    p.brand.toLowerCase().includes(query)
+                );
+            }
+            renderProducts(displayedProducts);
+        }
+
+        // Modal functions
+        function openHowItWorksModal() {
+            howItWorksModal.classList.remove('hidden');
+            howItWorksModal.classList.add('flex');
+        }
+
+        function closeHowItWorksModal() {
+            howItWorksModal.classList.add('hidden');
+            howItWorksModal.classList.remove('flex');
+        }
+
+        function openShopsModal() {
+            shopsModal.classList.remove('hidden');
+            shopsModal.classList.add('flex');
+        }
+
+        function closeShopsModal() {
+            shopsModal.classList.add('hidden');
+            shopsModal.classList.remove('flex');
+        }
+
+        function showTrendingProducts() {
+            displayedProducts = mockProducts.filter(p => p.trending === true);
+            renderProducts(displayedProducts);
+            searchInput.value = '';
+            document.getElementById('productsGrid').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // 6. EVENT LISTENERS
+        searchBtn.addEventListener('click', handleSearch);
+        searchInput.addEventListener('input', handleSearch);
+
+        clearBasket.addEventListener('click', () => {
+            basket = [];
+            renderProducts(displayedProducts);
+            renderBasket();
+        });
+
+        document.querySelectorAll('.quick-tag').forEach(tag => {
+            tag.addEventListener('click', () => {
+                searchInput.value = tag.textContent;
+                handleSearch();
+            });
+        });
+
+        // Cart Icon Click (Opens Overlay)
+        cartIconBtn.addEventListener('click', () => {
+            cartOverlay.classList.remove('hidden');
+        });
+
+        // Modal listeners
+        howItWorksLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            openHowItWorksModal();
+        });
+
+        document.getElementById('closeHowItWorks').addEventListener('click', closeHowItWorksModal);
+        document.getElementById('closeHowItWorksBtn').addEventListener('click', closeHowItWorksModal);
+
+        shopsLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            openShopsModal();
+        });
+
+        document.getElementById('closeShops').addEventListener('click', closeShopsModal);
+        document.getElementById('closeShopsBtn').addEventListener('click', closeShopsModal);
+
+        popularProductsLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            showTrendingProducts();
+        });
+
+        // Close modals on backdrop click
+        howItWorksModal.addEventListener('click', (e) => {
+            if (e.target === howItWorksModal) closeHowItWorksModal();
+        });
+
+        shopsModal.addEventListener('click', (e) => {
+            if (e.target === shopsModal) closeShopsModal();
+        });
+
+        // Init
+        renderProducts(displayedProducts);
+      });
+    </script>
+  
+</body></html>

@@ -7,6 +7,9 @@
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://code.iconify.design/2/2.1.0/iconify.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
@@ -367,420 +370,324 @@
     </div>
 
     <script>
-      // Wir warten, bis der DOM (die HTML Struktur) komplett geladen ist
+      // --- 1. SUPABASE SETUP ---
+      // FÜGE HIER DEINE DATEN EIN:
+      const SUPABASE_URL = 'https://ccoikocmrusafnelxzei.supabase.co';
+      const SUPABASE_KEY = 'sb_publishable_yXYlKpFHmDeTTN8L46CsRg_BXC3GlzB';
+      
+      // Verbindung herstellen
+      const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+      // --- 2. VARIABLEN ---
+      // Wir behalten die Shops für Farben & Regeln im Code (einfacher für den Start)
+      const shops = {
+          'Douglas': { color: 'bg-rose-500', shipping: 3.95, freeShippingThreshold: 24.95 },
+          'Sephora': { color: 'bg-neutral-900', shipping: 4.95, freeShippingThreshold: 30 },
+          'Flaconi': { color: 'bg-pink-500', shipping: 3.95, freeShippingThreshold: 19 },
+          'Notino': { color: 'bg-amber-500', shipping: 2.95, freeShippingThreshold: 25 },
+          'Shop Apotheke': { color: 'bg-emerald-500', shipping: 0, freeShippingThreshold: 29 }
+      };
+
+      let products = []; // Hier kommen die echten Daten rein!
+      let basket = [];
+      let displayedProducts = [];
+
+      // Elemente
+      const productsGrid = document.getElementById('productsGrid');
+      const emptyState = document.getElementById('emptyState');
+      const searchInput = document.getElementById('searchInput');
+      const basketEmpty = document.getElementById('basketEmpty');
+      const basketList = document.getElementById('basketList');
+      const cartCountBadge = document.getElementById('cartCountBadge');
+      const optimizationSection = document.getElementById('optimizationSection');
+      const optionsList = document.getElementById('optionsList');
+      const bestPrice = document.getElementById('bestPrice');
+      const savings = document.getElementById('savings');
+      const shopCards = document.getElementById('shopCards');
+      const mobileBasketItems = document.getElementById('mobileBasketItems');
+      const mobileBasketEmpty = document.getElementById('mobileBasketEmpty');
+      const basketSidebar = document.getElementById('basketSidebar');
+
+      // --- 3. DATEN LADEN (Supabase) ---
+      async function fetchProductsFromSupabase() {
+          console.log("Lade Daten aus Supabase...");
+          
+          // A. Hole Produkte
+          const { data: productData, error: prodError } = await supabase.from('products').select('*');
+          if (prodError) { console.error("Fehler Produkte:", prodError); return; }
+
+          // B. Hole Preise
+          const { data: priceData, error: priceError } = await supabase.from('prices').select('*');
+          if (priceError) { console.error("Fehler Preise:", priceError); return; }
+
+          // C. Zusammenfügen
+          products = productData.map(prod => {
+              const matchingPrices = priceData.filter(p => p.ean === prod.ean);
+              return {
+                  id: prod.id,
+                  ean: prod.ean,
+                  name: prod.name,
+                  brand: prod.brand,
+                  image: prod.image_url, // Achte auf den Namen in deiner DB (image oder image_url)!
+                  trending: prod.trending,
+                  prices: matchingPrices
+              };
+          });
+
+          displayedProducts = [...products];
+          renderProducts(displayedProducts);
+      }
+
+      // --- 4. RENDER FUNKTIONEN ---
+      function renderProducts(items) {
+          if (items.length === 0) {
+              productsGrid.classList.add('hidden');
+              emptyState.classList.remove('hidden');
+              return;
+          }
+          productsGrid.classList.remove('hidden');
+          emptyState.classList.add('hidden');
+
+          productsGrid.innerHTML = items.map(product => {
+              // Sicherheitscheck: Hat das Produkt Preise?
+              if (!product.prices || product.prices.length === 0) return '';
+              
+              const lowestPrice = Math.min(...product.prices.map(p => p.price));
+              const highestPrice = Math.max(...product.prices.map(p => p.price));
+              const inBasket = basket.find(b => b.id === product.id);
+
+              return `
+                  <div class="bg-white border border-neutral-200 rounded-xl p-4 hover:border-neutral-300 hover:shadow-md transition-all group">
+                      <div class="flex gap-4">
+                          <div class="w-20 h-20 bg-neutral-100 rounded-lg overflow-hidden flex-shrink-0">
+                              <img src="${product.image || 'https://placehold.co/200'}" alt="${product.name}" class="w-full h-full object-cover">
+                          </div>
+                          <div class="flex-1 min-w-0">
+                              <p class="text-xs text-neutral-500 mb-1 font-semibold uppercase">${product.brand}</p>
+                              <h3 class="text-sm font-medium text-neutral-900 line-clamp-2 mb-2">${product.name}</h3>
+                              <div class="flex items-baseline gap-2">
+                                  <span class="text-base font-bold text-neutral-900">ab €${lowestPrice.toFixed(2)}</span>
+                                  ${highestPrice > lowestPrice ? `<span class="text-xs text-neutral-400 line-through">€${highestPrice.toFixed(2)}</span>` : ''}
+                              </div>
+                          </div>
+                      </div>
+                      <div class="flex items-center gap-2 mt-4">
+                          <button onclick="window.toggleBasket(${product.id})" class="flex-1 py-2 px-4 rounded-lg transition-all flex items-center justify-center gap-2 ${inBasket ? 'bg-rose-500 text-white shadow-md shadow-rose-200' : 'bg-neutral-900 text-white hover:bg-neutral-800'}">
+                              <span class="iconify w-4 h-4" data-icon="${inBasket ? 'lucide:check' : 'lucide:plus'}"></span>
+                              ${inBasket ? 'Im Korb' : 'Hinzufügen'}
+                          </button>
+                      </div>
+                  </div>
+              `;
+          }).join('');
+      }
+
+      function renderBasket() {
+          const count = basket.length;
+          cartCountBadge.textContent = count;
+          count > 0 ? cartCountBadge.classList.remove('hidden') : cartCountBadge.classList.add('hidden');
+
+          const html = basket.map(product => {
+              const lowestPrice = Math.min(...product.prices.map(p => p.price));
+              return `
+                  <div class="flex items-center gap-3 p-3 bg-white border border-neutral-100 rounded-lg shadow-sm">
+                      <div class="w-10 h-10 bg-neutral-100 rounded-lg overflow-hidden flex-shrink-0">
+                          <img src="${product.image || 'https://placehold.co/200'}" alt="${product.name}" class="w-full h-full object-cover">
+                      </div>
+                      <div class="flex-1 min-w-0">
+                          <p class="text-xs font-medium text-neutral-900 truncate">${product.name}</p>
+                          <p class="text-xs text-neutral-500">ab €${lowestPrice.toFixed(2)}</p>
+                      </div>
+                      <button onclick="window.toggleBasket(${product.id})" class="p-1.5 text-neutral-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors">
+                          <span class="iconify w-4 h-4" data-icon="lucide:trash-2"></span>
+                      </button>
+                  </div>
+              `;
+          }).join('');
+
+          // Desktop Sidebar
+          if (count === 0) {
+              basketEmpty.classList.remove('hidden');
+              basketList.classList.add('hidden');
+              optimizationSection.classList.add('hidden');
+              document.getElementById('shopComparison').classList.add('hidden');
+          } else {
+              basketEmpty.classList.add('hidden');
+              basketList.classList.remove('hidden');
+              basketList.innerHTML = html;
+              calculateOptimization();
+          }
+
+          // Mobile Overlay
+          if (count === 0) {
+              mobileBasketEmpty.classList.remove('hidden');
+              mobileBasketItems.innerHTML = '';
+          } else {
+              mobileBasketEmpty.classList.add('hidden');
+              mobileBasketItems.innerHTML = html;
+          }
+      }
+
+      // --- 5. LOGIK ---
+      window.toggleBasket = function(productId) {
+          const product = products.find(p => p.id === productId);
+          const index = basket.findIndex(b => b.id === productId);
+          
+          if (index > -1) basket.splice(index, 1);
+          else basket.push(product);
+          
+          renderProducts(displayedProducts);
+          renderBasket();
+      }
+
+      function calculateOptimization() {
+          if (basket.length < 1) return;
+          optimizationSection.classList.remove('hidden');
+          document.getElementById('shopComparison').classList.remove('hidden');
+
+          // A. Einzel-Shop Optionen
+          const shopTotals = Object.keys(shops).map(shopName => {
+              let subtotal = 0;
+              let missing = 0;
+              basket.forEach(item => {
+                  const deal = item.prices.find(p => p.shop === shopName);
+                  if (deal) subtotal += deal.price;
+                  else missing++;
+              });
+              if (missing > 0) return null;
+
+              const rules = shops[shopName];
+              const shipping = subtotal >= rules.freeShippingThreshold ? 0 : rules.shipping;
+              return { label: `Alles bei ${shopName}`, shop: shopName, subtotal, shipping, total: subtotal + shipping, isSplit: false };
+          }).filter(Boolean);
+
+          // B. Split Option
+          let splitSubtotal = 0;
+          let splitShipping = 0;
+          const shopBuckets = {};
+          
+          basket.forEach(item => {
+              const bestDeal = item.prices.reduce((min, p) => p.price < min.price ? p : min, item.prices[0]);
+              if (!shopBuckets[bestDeal.shop]) shopBuckets[bestDeal.shop] = 0;
+              shopBuckets[bestDeal.shop] += bestDeal.price;
+          });
+
+          Object.keys(shopBuckets).forEach(shopName => {
+              const amount = shopBuckets[shopName];
+              const rules = shops[shopName] || {shipping: 4.95, freeShippingThreshold: 999};
+              splitSubtotal += amount;
+              if (amount < rules.freeShippingThreshold) splitShipping += rules.shipping;
+          });
+
+          const splitOption = {
+              type: 'split',
+              label: 'Smarte Aufteilung',
+              shop: 'Mix & Match',
+              subtotal: splitSubtotal,
+              shipping: splitShipping,
+              total: splitSubtotal + splitShipping,
+              isSplit: true
+          };
+
+          const allOptions = [splitOption, ...shopTotals].sort((a, b) => a.total - b.total);
+          const winner = allOptions[0];
+
+          // Ergebnis anzeigen
+          optionsList.innerHTML = `
+              <div class="p-3 rounded-lg border border-emerald-200 bg-white">
+                  <div class="flex items-center gap-2 mb-2">
+                       <span class="iconify w-4 h-4 ${winner.isSplit ? 'text-rose-500' : 'text-emerald-600'}" data-icon="${winner.isSplit ? 'lucide:split' : 'lucide:package'}"></span>
+                       <span class="text-sm font-semibold text-neutral-900">${winner.label}</span>
+                  </div>
+                  <div class="flex justify-between text-xs text-neutral-500">
+                      <span>Produkte: €${winner.subtotal.toFixed(2)}</span>
+                      <span>Versand: €${winner.shipping.toFixed(2)}</span>
+                  </div>
+                  <div class="mt-2 pt-2 border-t border-neutral-100 flex justify-between font-bold text-neutral-900">
+                      <span>Gesamt</span>
+                      <span>€${winner.total.toFixed(2)}</span>
+                  </div>
+              </div>
+          `;
+          bestPrice.textContent = `€${winner.total.toFixed(2)}`;
+          savings.parentElement.classList.add('invisible'); // Vereinfachung
+
+          // Detaillierte Karten
+          shopCards.innerHTML = allOptions.map((opt, idx) => {
+              const isWinner = idx === 0;
+              return `
+                  <div class="bg-white border ${isWinner ? 'border-emerald-500 ring-2 ring-emerald-500 ring-offset-2' : 'border-neutral-200'} rounded-xl p-5 flex flex-col">
+                      <div class="mb-4"><h3 class="text-lg font-bold text-neutral-900">${opt.shop}</h3></div>
+                      <div class="space-y-2 mb-4 flex-1 text-sm">
+                          <div class="flex justify-between"><span>Artikel</span><span>€${opt.subtotal.toFixed(2)}</span></div>
+                          <div class="flex justify-between"><span>Versand</span><span class="${opt.shipping === 0 ? 'text-emerald-600' : ''}">${opt.shipping === 0 ? '0 €' : '€'+opt.shipping.toFixed(2)}</span></div>
+                      </div>
+                      <div class="pt-4 border-t border-neutral-100 flex justify-between items-center">
+                          <span class="font-medium">Total</span><span class="text-xl font-bold ${isWinner ? 'text-emerald-600' : ''}">€${opt.total.toFixed(2)}</span>
+                      </div>
+                      ${isWinner ? '<div class="mt-3 text-center text-xs font-bold text-white bg-emerald-500 py-1 rounded">GÜNSTIGSTE</div>' : ''}
+                  </div>
+              `;
+          }).join('');
+      }
+
+      // --- 6. EVENT LISTENER ---
       document.addEventListener("DOMContentLoaded", () => {
-        
-        // 1. DATA Setup
-        const mockProducts = [
-            { id: 1, ean: '0769915190878', name: 'The Ordinary Niacinamide 10% + Zinc 1%', brand: 'The Ordinary', trending: true, image: 'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=200&h=200&fit=crop', prices: [
-                { shop: 'Douglas', price: 6.90, shipping: 3.95 },
-                { shop: 'Sephora', price: 7.50, shipping: 4.95 },
-                { shop: 'Flaconi', price: 6.50, shipping: 3.95 }
-            ]},
-            { id: 2, ean: '3337875597395', name: 'La Roche-Posay Effaclar Duo+', brand: 'La Roche-Posay', trending: false, image: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=200&h=200&fit=crop', prices: [
-                { shop: 'Douglas', price: 18.90, shipping: 3.95 },
-                { shop: 'Sephora', price: 19.50, shipping: 4.95 },
-                { shop: 'Notino', price: 16.90, shipping: 2.95 }
-            ]},
-            { id: 3, ean: '3614272049529', name: 'CeraVe Moisturizing Cream 454g', brand: 'CeraVe', trending: true, image: 'https://images.unsplash.com/photo-1611930022073-b7a4ba5fcccd?w=200&h=200&fit=crop', prices: [
-                { shop: 'Douglas', price: 16.90, shipping: 3.95 },
-                { shop: 'Flaconi', price: 15.90, shipping: 3.95 },
-                { shop: 'Notino', price: 14.50, shipping: 2.95 }
-            ]},
-            { id: 4, ean: '773602355280', name: 'MAC Matte Lipstick - Ruby Woo', brand: 'MAC', trending: true, image: 'https://images.unsplash.com/photo-1586495777744-4413f21062fa?w=200&h=200&fit=crop', prices: [
-                { shop: 'Douglas', price: 24.00, shipping: 3.95 },
-                { shop: 'Sephora', price: 24.00, shipping: 4.95 },
-                { shop: 'Flaconi', price: 23.50, shipping: 3.95 }
-            ]},
-            { id: 5, ean: '0607845080910', name: 'Paula\'s Choice 2% BHA Liquid Exfoliant', brand: 'Paula\'s Choice', trending: false, image: 'https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?w=200&h=200&fit=crop', prices: [
-                { shop: 'Douglas', price: 35.00, shipping: 3.95 },
-                { shop: 'Sephora', price: 36.00, shipping: 4.95 },
-                { shop: 'Flaconi', price: 34.00, shipping: 3.95 }
-            ]},
-            { id: 6, ean: '3348901419864', name: 'Dior Addict Lip Glow', brand: 'Dior', trending: true, image: 'https://images.unsplash.com/photo-1631214524020-7e18db9a8f92?w=200&h=200&fit=crop', prices: [
-                { shop: 'Douglas', price: 38.50, shipping: 3.95 },
-                { shop: 'Sephora', price: 39.00, shipping: 4.95 },
-                { shop: 'Flaconi', price: 37.90, shipping: 3.95 }
-            ]}
-        ];
+          fetchProductsFromSupabase(); // Start!
 
-        const shops = {
-            'Douglas': { color: 'bg-rose-500', shipping: 3.95, freeShippingThreshold: 24.95 },
-            'Sephora': { color: 'bg-neutral-900', shipping: 4.95, freeShippingThreshold: 30 },
-            'Flaconi': { color: 'bg-pink-500', shipping: 3.95, freeShippingThreshold: 19 },
-            'Notino': { color: 'bg-amber-500', shipping: 2.95, freeShippingThreshold: 25 },
-            'Shop Apotheke': { color: 'bg-emerald-500', shipping: 0, freeShippingThreshold: 29 }
-        };
+          // Suche
+          document.getElementById('searchBtn').addEventListener('click', () => {
+              const query = searchInput.value.toLowerCase().trim();
+              displayedProducts = products.filter(p => p.name.toLowerCase().includes(query) || p.brand.toLowerCase().includes(query));
+              renderProducts(displayedProducts);
+          });
+          
+          searchInput.addEventListener('input', (e) => {
+              const query = e.target.value.toLowerCase().trim();
+              if(query === '') displayedProducts = [...products];
+              else displayedProducts = products.filter(p => p.name.toLowerCase().includes(query) || p.brand.toLowerCase().includes(query));
+              renderProducts(displayedProducts);
+          });
 
-        let basket = [];
-        let displayedProducts = [...mockProducts];
+          // Quick Tags
+          document.querySelectorAll('.quick-tag').forEach(tag => {
+              tag.addEventListener('click', () => {
+                  searchInput.value = tag.innerText;
+                  searchInput.dispatchEvent(new Event('input'));
+              });
+          });
 
-        // 2. DOM Elements
-        const productsGrid = document.getElementById('productsGrid');
-        const emptyState = document.getElementById('emptyState');
-        const searchInput = document.getElementById('searchInput');
-        const searchBtn = document.getElementById('searchBtn');
-        
-        // Desktop Sidebar Elements
-        const basketEmpty = document.getElementById('basketEmpty');
-        const basketList = document.getElementById('basketList');
-        const cartCountBadge = document.getElementById('cartCountBadge');
-        const clearBasket = document.getElementById('clearBasket');
-        const optimizationSection = document.getElementById('optimizationSection');
-        const optionsList = document.getElementById('optionsList');
-        const bestPrice = document.getElementById('bestPrice');
-        const savings = document.getElementById('savings');
-        const shopComparison = document.getElementById('shopComparison');
-        const shopCards = document.getElementById('shopCards');
-        
-        // Mobile Overlay Elements
-        const cartOverlay = document.getElementById('cartOverlay');
-        const mobileBasketItems = document.getElementById('mobileBasketItems');
-        const mobileBasketEmpty = document.getElementById('mobileBasketEmpty');
-        
-        // Modals & Links
-        const howItWorksModal = document.getElementById('howItWorksModal');
-        const shopsModal = document.getElementById('shopsModal');
-        const howItWorksLink = document.getElementById('howItWorksLink');
-        const popularProductsLink = document.getElementById('popularProductsLink');
-        const shopsLink = document.getElementById('shopsLink');
-        const cartIconBtn = document.getElementById('cartIconBtn');
+          // Clear Basket
+          document.getElementById('clearBasket').addEventListener('click', () => {
+              basket = [];
+              renderBasket();
+              renderProducts(displayedProducts);
+          });
 
-        // 3. RENDER Functions
-        function renderProducts(products) {
-            if (products.length === 0) {
-                productsGrid.classList.add('hidden');
-                emptyState.classList.remove('hidden');
-                return;
-            }
+          // Modals & Drawer
+          document.getElementById('cartIconBtn').addEventListener('click', () => document.getElementById('cartOverlay').classList.remove('hidden'));
+          
+          // Helper für Modals
+          const toggleModal = (id, show) => {
+              const el = document.getElementById(id);
+              if(show) { el.classList.remove('hidden'); el.classList.add('flex'); }
+              else { el.classList.add('hidden'); el.classList.remove('flex'); }
+          }
 
-            productsGrid.classList.remove('hidden');
-            emptyState.classList.add('hidden');
+          document.getElementById('howItWorksLink').addEventListener('click', (e) => { e.preventDefault(); toggleModal('howItWorksModal', true); });
+          document.getElementById('closeHowItWorks').addEventListener('click', () => toggleModal('howItWorksModal', false));
+          document.getElementById('closeHowItWorksBtn').addEventListener('click', () => toggleModal('howItWorksModal', false));
 
-            productsGrid.innerHTML = products.map(product => {
-                const lowestPrice = Math.min(...product.prices.map(p => p.price));
-                const highestPrice = Math.max(...product.prices.map(p => p.price));
-                const inBasket = basket.find(b => b.id === product.id);
-
-                return `
-                    <div class="bg-white border border-neutral-200 rounded-xl p-4 hover:border-neutral-300 hover:shadow-md transition-all group">
-                        <div class="flex gap-4">
-                            <div class="w-20 h-20 bg-neutral-100 rounded-lg overflow-hidden flex-shrink-0">
-                                <img src="${product.image}" alt="${product.name}" class="w-full h-full object-cover">
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <p class="text-xs text-neutral-500 mb-1 font-semibold uppercase">${product.brand}</p>
-                                <h3 class="text-sm font-medium text-neutral-900 line-clamp-2 mb-2">${product.name}</h3>
-                                <div class="flex items-baseline gap-2">
-                                    <span class="text-base font-bold text-neutral-900">ab €${lowestPrice.toFixed(2)}</span>
-                                    ${highestPrice > lowestPrice ? `<span class="text-xs text-neutral-400 line-through">€${highestPrice.toFixed(2)}</span>` : ''}
-                                </div>
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-2 mt-4">
-                            <button onclick="window.toggleBasket(${product.id})" class="flex-1 py-2 px-4 rounded-lg transition-all flex items-center justify-center gap-2 ${inBasket ? 'bg-rose-500 text-white shadow-md shadow-rose-200' : 'bg-neutral-900 text-white hover:bg-neutral-800'}">
-                                <span class="iconify w-4 h-4" data-icon="${inBasket ? 'lucide:check' : 'lucide:plus'}"></span>
-                                ${inBasket ? 'Hinzugefügt' : 'In den Warenkorb'}
-                            </button>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        function renderBasket() {
-            // Update Badge
-            if (basket.length > 0) {
-                cartCountBadge.classList.remove('hidden');
-                cartCountBadge.textContent = basket.length;
-            } else {
-                cartCountBadge.classList.add('hidden');
-            }
-
-            // --- Render DESKTOP Sidebar ---
-            if (basket.length === 0) {
-                basketEmpty.classList.remove('hidden');
-                basketList.classList.add('hidden');
-                optimizationSection.classList.add('hidden');
-                shopComparison.classList.add('hidden');
-            } else {
-                basketEmpty.classList.add('hidden');
-                basketList.classList.remove('hidden');
-                basketList.innerHTML = generateBasketHTML(basket);
-                calculateOptimization();
-            }
-
-            // --- Render MOBILE Overlay ---
-            if (basket.length === 0) {
-                mobileBasketEmpty.classList.remove('hidden');
-                mobileBasketItems.innerHTML = '';
-            } else {
-                mobileBasketEmpty.classList.add('hidden');
-                mobileBasketItems.innerHTML = generateBasketHTML(basket);
-            }
-        }
-
-        function generateBasketHTML(currentBasket) {
-            return currentBasket.map(product => {
-                const lowestPrice = Math.min(...product.prices.map(p => p.price));
-                return `
-                    <div class="flex items-center gap-3 p-3 bg-white border border-neutral-100 rounded-lg shadow-sm">
-                        <div class="w-10 h-10 bg-neutral-100 rounded-lg overflow-hidden flex-shrink-0">
-                            <img src="${product.image}" alt="${product.name}" class="w-full h-full object-cover">
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <p class="text-xs font-medium text-neutral-900 truncate">${product.name}</p>
-                            <p class="text-xs text-neutral-500">ab €${lowestPrice.toFixed(2)}</p>
-                        </div>
-                        <button onclick="window.toggleBasket(${product.id})" class="p-1.5 text-neutral-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors">
-                            <span class="iconify w-4 h-4" data-icon="lucide:trash-2"></span>
-                        </button>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        // 4. LOGIC Functions
-        window.toggleBasket = function(productId) {
-            const product = mockProducts.find(p => p.id === productId);
-            const index = basket.findIndex(b => b.id === productId);
-
-            if (index > -1) {
-                basket.splice(index, 1);
-            } else {
-                basket.push(product);
-            }
-
-            renderProducts(displayedProducts);
-            renderBasket();
-        }
-
-        function calculateOptimization() {
-            if (basket.length < 1) return;
-
-            optimizationSection.classList.remove('hidden');
-            shopComparison.classList.remove('hidden');
-
-            const allShops = Object.keys(shops);
-            const shopTotals = allShops.map(shopName => {
-                let subtotal = 0;
-                let missingCount = 0;
-
-                basket.forEach(item => {
-                    const deal = item.prices.find(p => p.shop === shopName);
-                    if (deal) {
-                        subtotal += deal.price;
-                    } else {
-                        missingCount++;
-                    }
-                });
-
-                if (missingCount > 0) return null;
-
-                const shopRules = shops[shopName];
-                const shipping = subtotal >= shopRules.freeShippingThreshold ? 0 : shopRules.shipping;
-
-                return {
-                    type: 'single',
-                    label: `Alles bei ${shopName}`,
-                    shop: shopName,
-                    subtotal: subtotal,
-                    shipping: shipping,
-                    total: subtotal + shipping,
-                    isSplit: false
-                };
-            }).filter(Boolean);
-
-            let splitSubtotal = 0;
-            let splitShipping = 0;
-            const shopBuckets = {};
-
-            basket.forEach(item => {
-                const bestDeal = item.prices.reduce((min, p) => p.price < min.price ? p : min, item.prices[0]);
-                if (!shopBuckets[bestDeal.shop]) shopBuckets[bestDeal.shop] = 0;
-                shopBuckets[bestDeal.shop] += bestDeal.price;
-            });
-
-            Object.keys(shopBuckets).forEach(shopName => {
-                 const amount = shopBuckets[shopName];
-                 const rules = shops[shopName];
-                 splitSubtotal += amount;
-                 if (amount < rules.freeShippingThreshold) {
-                     splitShipping += rules.shipping;
-                 }
-            });
-
-            const splitOption = {
-                type: 'split',
-                label: 'Smarte Aufteilung',
-                shop: 'Mehrere Shops',
-                subtotal: splitSubtotal,
-                shipping: splitShipping,
-                total: splitSubtotal + splitShipping,
-                isSplit: true
-            };
-
-            const allOptions = [splitOption, ...shopTotals].sort((a, b) => a.total - b.total);
-            const winner = allOptions[0];
-            const loser = allOptions[allOptions.length - 1];
-
-            optionsList.innerHTML = `
-                <div class="p-3 rounded-lg border border-emerald-200 bg-white">
-                    <div class="flex items-center gap-2 mb-2">
-                         <span class="iconify w-4 h-4 ${winner.isSplit ? 'text-rose-500' : 'text-emerald-600'}" data-icon="${winner.isSplit ? 'lucide:split' : 'lucide:package'}"></span>
-                         <span class="text-sm font-semibold text-neutral-900">${winner.label}</span>
-                    </div>
-                    <div class="flex justify-between text-xs text-neutral-500">
-                        <span>Produkte: €${winner.subtotal.toFixed(2)}</span>
-                        <span>Versand: €${winner.shipping.toFixed(2)}</span>
-                    </div>
-                    <div class="mt-2 pt-2 border-t border-neutral-100 flex justify-between font-bold text-neutral-900">
-                        <span>Gesamt</span>
-                        <span>€${winner.total.toFixed(2)}</span>
-                    </div>
-                </div>
-            `;
-
-            bestPrice.textContent = `€${winner.total.toFixed(2)}`;
-            const savingsAmount = loser ? (loser.total - winner.total) : 0;
-            if (savingsAmount > 0.1) {
-                savings.textContent = `Spare €${savingsAmount.toFixed(2)}`;
-                savings.parentElement.classList.remove('invisible');
-            } else {
-                savings.textContent = "Bestes Angebot";
-            }
-
-            renderComparisonTable(allOptions);
-        }
-
-        function renderComparisonTable(options) {
-            shopCards.innerHTML = options.map((opt, idx) => {
-                const isWinner = idx === 0;
-                return `
-                    <div class="bg-white border ${isWinner ? 'border-emerald-500 ring-2 ring-emerald-500 ring-offset-2' : 'border-neutral-200'} rounded-xl p-5 flex flex-col">
-                        <div class="mb-4">
-                            <h3 class="text-lg font-bold text-neutral-900">${opt.shop}</h3>
-                            <span class="text-xs text-neutral-500">${opt.isSplit ? 'Optimierte Kombination' : 'Ein Paket'}</span>
-                        </div>
-                        <div class="space-y-2 mb-4 flex-1">
-                            <div class="flex justify-between text-sm">
-                                <span class="text-neutral-500">Artikel</span>
-                                <span>€${opt.subtotal.toFixed(2)}</span>
-                            </div>
-                            <div class="flex justify-between text-sm">
-                                <span class="text-neutral-500">Versand</span>
-                                <span class="${opt.shipping === 0 ? 'text-emerald-600 font-medium' : ''}">${opt.shipping === 0 ? 'Kostenlos' : '€'+opt.shipping.toFixed(2)}</span>
-                            </div>
-                        </div>
-                        <div class="pt-4 border-t border-neutral-100">
-                            <div class="flex justify-between items-center">
-                                <span class="text-sm font-medium text-neutral-900">Gesamt</span>
-                                <span class="text-xl font-bold ${isWinner ? 'text-emerald-600' : 'text-neutral-900'}">€${opt.total.toFixed(2)}</span>
-                            </div>
-                        </div>
-                        ${isWinner ? '<div class="mt-3 text-center text-xs font-bold text-white bg-emerald-500 py-1 rounded">GÜNSTIGSTE OPTION</div>' : ''}
-                    </div>
-                `;
-            }).join('');
-        }
-
-        // 5. SEARCH Functionality
-        function handleSearch() {
-            const query = searchInput.value.toLowerCase().trim();
-            if (query === '') {
-                displayedProducts = [...mockProducts];
-            } else {
-                displayedProducts = mockProducts.filter(p =>
-                    p.name.toLowerCase().includes(query) ||
-                    p.brand.toLowerCase().includes(query)
-                );
-            }
-            renderProducts(displayedProducts);
-        }
-
-        // Modal functions
-        function openHowItWorksModal() {
-            howItWorksModal.classList.remove('hidden');
-            howItWorksModal.classList.add('flex');
-        }
-
-        function closeHowItWorksModal() {
-            howItWorksModal.classList.add('hidden');
-            howItWorksModal.classList.remove('flex');
-        }
-
-        function openShopsModal() {
-            shopsModal.classList.remove('hidden');
-            shopsModal.classList.add('flex');
-        }
-
-        function closeShopsModal() {
-            shopsModal.classList.add('hidden');
-            shopsModal.classList.remove('flex');
-        }
-
-        function showTrendingProducts() {
-            displayedProducts = mockProducts.filter(p => p.trending === true);
-            renderProducts(displayedProducts);
-            searchInput.value = '';
-            document.getElementById('productsGrid').scrollIntoView({ behavior: 'smooth' });
-        }
-
-        // 6. EVENT LISTENERS
-        searchBtn.addEventListener('click', handleSearch);
-        searchInput.addEventListener('input', handleSearch);
-
-        clearBasket.addEventListener('click', () => {
-            basket = [];
-            renderProducts(displayedProducts);
-            renderBasket();
-        });
-
-        document.querySelectorAll('.quick-tag').forEach(tag => {
-            tag.addEventListener('click', () => {
-                searchInput.value = tag.textContent;
-                handleSearch();
-            });
-        });
-
-        // Cart Icon Click (Opens Overlay)
-        cartIconBtn.addEventListener('click', () => {
-            cartOverlay.classList.remove('hidden');
-        });
-
-        // Modal listeners
-        howItWorksLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            openHowItWorksModal();
-        });
-
-        document.getElementById('closeHowItWorks').addEventListener('click', closeHowItWorksModal);
-        document.getElementById('closeHowItWorksBtn').addEventListener('click', closeHowItWorksModal);
-
-        shopsLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            openShopsModal();
-        });
-
-        document.getElementById('closeShops').addEventListener('click', closeShopsModal);
-        document.getElementById('closeShopsBtn').addEventListener('click', closeShopsModal);
-
-        popularProductsLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            showTrendingProducts();
-        });
-
-        // Close modals on backdrop click
-        howItWorksModal.addEventListener('click', (e) => {
-            if (e.target === howItWorksModal) closeHowItWorksModal();
-        });
-
-        shopsModal.addEventListener('click', (e) => {
-            if (e.target === shopsModal) closeShopsModal();
-        });
-
-        // Init
-        renderProducts(displayedProducts);
+          document.getElementById('shopsLink').addEventListener('click', (e) => { e.preventDefault(); toggleModal('shopsModal', true); });
+          document.getElementById('closeShops').addEventListener('click', () => toggleModal('shopsModal', false));
+          document.getElementById('closeShopsBtn').addEventListener('click', () => toggleModal('shopsModal', false));
+          
+          document.getElementById('popularProductsLink').addEventListener('click', (e) => {
+              e.preventDefault();
+              displayedProducts = products.filter(p => p.trending === true);
+              renderProducts(displayedProducts);
+              productsGrid.scrollIntoView({ behavior: 'smooth' });
+          });
       });
     </script>
   

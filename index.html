@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Combimetics - Smarter Preisvergleich</title>
+    <title>Combimetics - Beauty Preisvergleich</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -12,106 +12,94 @@
     
     <style>
       body { font-family: 'Inter', sans-serif; }
-      .modal-overlay { z-index: 100; }
+      /* Modal Fix: Erzwingt die Zentrierung */
+      .modal-overlay { 
+          z-index: 999; 
+          display: none; 
+          align-items: center; 
+          justify-content: center;
+      }
+      .modal-overlay.active { 
+          display: flex !important; 
+      }
     </style>
 </head>
 <body class="bg-neutral-50 font-sans min-h-screen flex flex-col">
     
     <header class="bg-white border-b border-neutral-200 sticky top-0 z-50 h-24">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
-        <div class="flex h-full items-center justify-between">
-          
-          <div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="window.location.reload()">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-between">
+        <div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="window.location.reload()">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 607 205" class="h-16 w-auto">
               <clipPath id="cl_3"><rect y="0.00012207031" width="607" height="205"/></clipPath>
               <g clip-path="url(#cl_3)">
                 <path fill="#314353" transform="matrix(0.200198 0 0 0.200391 0 0.00012207)" d="M1087.85 502.067C1099.16 501.287 1125.63 501.683 1137.02 502.13C1134.67 543.848 1135.62 593.184 1136.29 635.23C1163.62 618.799 1176.23 606.66 1210.95 603.411C1244.49 600.455 1277.83 610.864 1303.72 632.371C1331.45 655.182 1348.8 688.213 1351.84 723.985C1355.24 763.237 1341.34 800.256 1316.19 830.052C1267.47 879.77 1203.26 882.672 1145.22 848.156C1142.45 846.513 1139.55 844.916 1136.76 843.301C1136.79 849.92 1138.72 861.739 1133.56 865.471C1125.59 865.115 1092.06 865.454 1087.95 863.377C1085.32 825.257 1087.95 773.38 1087.96 733.696L1088.87 558.805C1088.91 540.347 1087.62 519.516 1087.85 502.067ZM1230.47 821.918C1276.85 816.159 1309.81 773.937 1304.14 727.548C1298.47 681.159 1256.31 648.119 1209.91 653.702C1163.38 659.3 1130.24 701.597 1135.92 748.111C1141.61 794.625 1183.97 827.692 1230.47 821.918Z"/>
                 <path fill="#314353" transform="matrix(0.200198 0 0 0.200391 0 0.00012207)" d="M2273.67 107.698C2353.14 103.907 2420.65 165.252 2424.46 244.728C2428.27 324.205 2366.95 391.728 2287.47 395.56C2207.97 399.393 2140.41 338.038 2136.6 258.533C2132.79 179.028 2194.16 111.49 2273.67 107.698Z"/>
                 <path fill="#ACB8BC" transform="matrix(0.200198 0 0 0.200391 0 0.00012207)" d="M2268.96 118.837C2342.51 112.437 2407.29 166.973 2413.52 240.543C2419.75 314.114 2365.06 378.762 2291.47 384.815C2218.13 390.849 2153.75 336.381 2147.54 263.056C2141.33 189.731 2195.65 125.217 2268.96 118.837Z"/>
-                <path fill="#314353" transform="matrix(0.200198 0 0 0.200391 0 0.00012207)" d="M2019.98 287.731C2095.98 279.251 2164.51 333.882 2173.18 409.862C2181.85 485.842 2127.39 554.505 2051.43 563.364C1975.21 572.254 1906.25 517.56 1897.55 441.312C1888.85 365.064 1943.71 296.241 2019.98 287.731ZM2040.5 553.128C2110.61 550.347 2165.33 491.498 2163.01 421.371C2160.69 351.245 2102.21 296.137 2032.07 297.99C1961.27 299.861 1905.53 359.017 1907.87 429.803C1910.21 500.589 1969.73 555.936 2040.5 553.128Z"/>
-                <path fill="#314353" transform="matrix(0.200198 0 0 0.200391 0 0.00012207)" d="M482.548 604.1C555.869 595.07 622.638 647.162 631.715 720.477C640.792 793.792 588.743 860.594 515.433 869.718C442.058 878.85 375.182 826.744 366.097 753.362C357.012 679.981 409.161 613.138 482.548 604.1ZM508.456 858.382C575.443 852.97 625.333 794.238 619.84 727.258C614.348 660.278 555.557 610.458 488.584 616.03C421.723 621.593 372.005 680.263 377.488 747.13C382.971 813.998 441.582 863.785 508.456 858.382Z"/>
-                <path fill="#314353" transform="matrix(0.200198 0 0 0.200391 0 0.00012207)" d="M859.512 642.948C873.285 630.534 877.753 624.025 895.448 615.182C920.664 602.397 949.976 600.341 976.729 609.482C1000.76 617.373 1020.57 634.673 1031.63 657.428C1048.54 691.907 1044.15 744.005 1043.89 782.159C1043.79 796.905 1045.59 853.005 1041.89 863.942C1038.43 866.893 1001.33 866.678 996.39 864.094C992.188 857.896 994.807 807.515 994.981 797.179C995.125 782.545 995.187 767.91 995.167 753.275C995.19 713.834 998.02 652.295 940.763 652.02C923.41 651.937 912.156 655.826 899.81 668.46C877.45 691.343 879.134 724.214 879.735 753.873C880.068 767.413 880.23 780.956 880.221 794.5C880.296 807.603 883.289 851.974 876.749 865.588C876.62 865.857 862.204 866.1 861.127 865.947C856.208 865.252 832.584 868.358 831.561 861.773C824.238 814.65 838.299 738.789 827.609 694.435C825.42 685.334 820.911 676.954 814.522 670.113C804.79 659.737 791.3 653.701 777.078 653.362C760.562 653.086 746.627 659.404 735.051 670.901C712.124 693.671 717.242 731.913 716.971 761.215C716.648 796.195 717.647 830.72 717.354 865.487C699.597 864.719 685.42 863.849 667.608 865.597C665.79 808.426 669.139 749.238 667.678 691.819C666.996 665.011 666.5 634.831 667.769 608.174C676.124 608.102 706.571 606.716 714.127 610.024C716.798 611.194 716.757 626.33 716.885 630.45C741.303 611.595 747.287 606.49 779.889 604.426C782.324 604.193 793.26 605.026 796.476 605.313C827.579 608.092 840.68 620.815 859.512 642.948Z"/>
-                <path fill="#314353" transform="matrix(0.200198 0 0 0.200391 0 0.00012207)" d="M1677.59 640.44C1681.2 637.549 1685.49 633.312 1688.86 629.983C1724.36 594.925 1792.81 592.878 1829.46 630.422C1840.84 642.154 1849.02 656.6 1853.24 672.388C1860.15 697.857 1859.31 742.773 1859.35 770.274C1859.4 801.786 1859.28 833.297 1859 864.808C1847.08 866.516 1833.61 866.368 1821.52 865.899C1819.21 865.809 1812.38 865.498 1811.07 863.232C1807.2 856.555 1809.3 839.609 1809.38 831.784C1809.71 800.665 1816.4 692.356 1796.02 671.057C1787.34 661.991 1769.33 651.532 1756.65 651.411C1741.41 651.265 1724.21 660.429 1713.62 671.03C1692.9 691.747 1696.56 728.435 1696.74 755.32L1696.87 802.5C1697.04 823.346 1696.97 844.193 1696.67 865.038C1679.79 865.726 1668.78 864.02 1649.78 865.824C1646.64 812.269 1654.46 752.582 1646.03 699.256C1644.65 690.563 1638.96 676.265 1632.7 669.822C1602.1 638.329 1557.4 654.073 1538.98 689.478C1530.37 706.827 1534.13 740.089 1533.6 760.5C1532.72 794.276 1535.36 830.549 1533.49 864.68C1525.04 865.232 1492.01 865.978 1485.86 862.451C1485.66 861.487 1485.5 860.517 1485.36 859.543C1482.65 840.696 1482.87 614.683 1485.65 610.979C1492.92 608.737 1523.47 607.351 1530.75 610.735C1534.12 612.301 1533.05 625.993 1533.12 630.54C1554.51 617.784 1575.9 605.101 1601.44 603.392C1603.48 603.325 1605.53 603.302 1607.57 603.323C1635.91 603.694 1658.78 621.162 1677.59 640.44Z"/>
-                <path fill="#314353" transform="matrix(0.200198 0 0 0.200391 0 0.00012207)" d="M2011.1 603.59C2084.44 597.545 2149.98 656.382 2146.37 730.994C2146.03 738.111 2150.99 753.803 2141.22 754.043C2117.57 754.625 2093.72 753.36 2070.03 752.68C2036.96 751.825 2003.87 751.881 1970.8 752.847C1965.12 752.979 1944.96 752.611 1941.11 755.332C1935.03 765.899 1959.37 799.228 1969.18 806.041C2014.45 837.501 2062.91 829.198 2094.73 784.421L2096.67 782.589C2106.08 780.305 2130.11 795.12 2135.55 802.372C2136.32 807.73 2130.45 816.735 2127.38 821.287C2089.43 877.492 1997.49 883.524 1944.64 845.736C1917.85 826.681 1899.81 797.679 1894.58 765.221C1888.57 727.976 1895.69 684.813 1918.56 654.483C1943.97 620.775 1971.27 610.01 2011.1 603.59ZM1941.95 711.776C1972.74 710.989 2004.62 711.371 2035.5 711.393C2043.39 711.303 2090.73 710.511 2095.76 709.238C2096.82 707.182 2097.07 706.201 2095.9 703.833C2075.99 663.663 2047.12 645.99 2003.09 650.46C1971.67 664.496 1950.28 674.677 1941.95 711.776Z"/>
-                <path fill="#314353" transform="matrix(0.200198 0 0 0.200391 0 0.00012207)" d="M2816.32 604.705C2829.88 602.385 2862.33 607.12 2875.7 611.326C2904.1 620.266 2919.97 634.457 2933.59 660.288C2926.39 665.478 2902.21 680.209 2893.86 682.491C2874.5 657.294 2852.79 646.914 2820.28 649.11C2804.47 650.178 2794.44 655.477 2784.27 667.363C2781.27 680.05 2781.54 680.874 2784.77 693.601C2815.03 725.673 2880.57 708.763 2919.9 744.246C2932.01 755.175 2937.89 770.207 2938.73 786.231C2939.78 806.264 2934.02 824.243 2920.48 839.211C2897.36 864.781 2865.66 869.28 2832.99 870.847C2809.72 869.608 2783.35 866.143 2762.99 853.115C2750.88 845.368 2721.85 820.484 2729.54 802.813C2731.58 798.12 2767.96 780.747 2770.6 786.522C2788.52 825.809 2833.76 839.517 2871.35 819.329C2889.5 809.643 2898.52 788.599 2876.7 776.914C2865.92 771.139 2854.22 768.215 2842.45 765.31C2803.55 754.725 2743.88 749.635 2733.76 701.55C2730.82 681.218 2733.85 656.642 2745.72 639.429C2762.85 614.592 2789.15 609.663 2816.32 604.705Z"/>
-                <path fill="#314353" transform="matrix(0.200198 0 0 0.200391 0 0.00012207)" d="M218.655 604.319C222.279 603.577 226.129 603.812 229.768 603.636C273.488 601.523 311.754 624.222 337.253 658.78C339.921 662.396 344.209 667.16 345.535 671.493C343.577 674.43 335.638 680.795 332.542 682.48C318.432 690.156 310.911 705.311 297.608 688.552C283.434 670.696 264.319 656.385 241.513 653.119C219.639 649.875 197.381 655.602 179.789 669.002C120.349 713.584 143.005 810.055 217.092 821.494C245.806 825.928 264.896 817.59 287.26 800.29C291.388 796.832 300.115 784.175 305.481 778.673C314.283 782.797 338.282 797.444 343.449 805.328C344.03 809.017 343.783 808.128 341.716 811.503C302.838 874.979 209.595 889.159 150.269 846.848C91.086 804.639 79.1898 715.438 122.056 657.563C146.956 623.944 178.568 610.545 218.655 604.319Z"/>
-                <path fill="#314353" transform="matrix(0.200198 0 0 0.200391 0 0.00012207)" d="M2580.66 604.36C2581.14 604.258 2581.62 604.156 2582.1 604.055C2609.81 604.935 2638.52 611.11 2661.78 626.956C2674.84 635.855 2696.41 657.934 2699.34 673.867C2697.17 680.339 2671.75 694.394 2664.74 695.416C2659.47 692.919 2649.91 680.054 2645.79 676.507C2615 649.972 2573.61 642.557 2538.94 667.906C2519.82 681.841 2507.16 702.93 2503.86 726.357C2500.45 748.748 2506.11 771.574 2519.6 789.771C2544.39 822.889 2590.92 831.383 2626.93 811.886C2636.66 806.618 2641.51 801.975 2650.16 795.516C2653.57 791 2659.65 781.852 2663.77 779.098C2669.85 777.949 2698.25 797.001 2700.98 803.975C2700.04 810.079 2697.99 813.801 2694.26 818.795C2673.41 846.75 2642.18 865.13 2607.61 869.787C2481.75 887.339 2408.83 749.136 2485.75 651.65C2512.64 617.571 2539.3 609.882 2580.66 604.36Z"/>
-                <path fill="#314353" transform="matrix(0.200198 0 0 0.200391 0 0.00012207)" d="M2215.71 527.143C2222.43 527.199 2257.86 524.566 2259.9 530.992C2264.24 544.663 2256.48 598.414 2262.11 608.458C2266.86 611.227 2321.4 609.589 2330.99 609.528C2331.37 623.666 2331.35 642.37 2330.79 656.272C2307.78 657.185 2284.41 656.897 2261.36 656.843C2260.39 670.79 2261 694.893 2260.88 709.371C2260.67 728.955 2260.76 748.54 2261.13 768.121C2261.58 795.899 2258.5 819.225 2295.4 822.633C2304.14 823.44 2319.53 820.15 2326.02 824.634C2329.68 829.261 2328.52 841.106 2328.41 847.5C2328.53 851.724 2329.24 857.305 2328.01 861.342C2327.41 863.328 2326.15 864.957 2324.26 865.855C2314.11 870.662 2267.63 865.297 2256.04 861.314C2238.3 855.213 2224.74 841.601 2218.07 824.133C2210.17 803.434 2212.03 714.921 2212.69 689.62C2212.92 680.461 2215.48 665.641 2211.51 657.555C2207.24 654.125 2172.5 655.533 2164.75 655.564C2163.84 642.679 2164.66 622.323 2164.97 608.92C2178.65 608.631 2195.32 611.342 2208.53 608.334C2219.07 605.933 2208.46 538.413 2215.71 527.143Z"/>
-                <path fill="#314353" transform="matrix(0.200198 0 0 0.200391 0 0.00012207)" d="M1388.37 609.166C1395.54 608.721 1431.51 607.445 1436.16 611.107C1437.69 623.225 1437.31 642.138 1437.34 654.723C1437.44 679.148 1437.37 703.574 1437.15 727.999L1437.14 803.075C1437.21 812.638 1438.75 858.139 1435.17 863.862C1426.7 864.294 1395.91 865.901 1389.52 863.162C1388.78 860.891 1386.64 616.707 1388.37 609.166Z"/>
-                <path fill="#314353" transform="matrix(0.200198 0 0 0.200391 0 0.00012207)" d="M2370.35 609.97C2379.95 610.759 2412.22 609.199 2416.86 612.118C2418.91 624.444 2418.12 666.608 2418.15 681.082C2418.27 739.347 2421.58 807.698 2416.04 865.209C2411.67 866.512 2378.53 864.871 2369.48 865.708C2370.48 835.704 2369.82 802.299 2369.61 772.129L2369.51 684.849C2369.43 668.34 2367.77 623.901 2370.35 609.97Z"/>
-                <path fill="#314353" transform="matrix(0.200198 0 0 0.200391 0 0.00012207)" d="M2390.62 498.726C2409.66 495.912 2427.41 508.972 2430.39 527.987C2433.37 547.002 2420.47 564.865 2401.48 568.012C2382.26 571.197 2364.12 558.098 2361.1 538.846C2358.09 519.594 2371.35 501.575 2390.62 498.726Z"/>
-                <path fill="#314353" transform="matrix(0.200198 0 0 0.200391 0 0.00012207)" d="M1409.48 498.759C1428.63 495.986 1446.4 509.264 1449.16 528.411C1451.92 547.558 1438.63 565.317 1419.49 568.07C1400.35 570.821 1382.61 557.545 1379.85 538.413C1377.09 519.28 1390.35 501.529 1409.48 498.759Z"/>
               </g>
             </svg>
-          </div>
-
-          <nav class="hidden md:flex items-center gap-8">
-            <button class="text-sm font-medium text-neutral-600 hover:text-neutral-900 transition-colors" id="popularProductsLink">Beliebte Produkte</button>
-            <button class="text-sm font-medium text-neutral-600 hover:text-neutral-900 transition-colors" id="howItWorksLink">So funktioniert's</button>
-          </nav>
-
-          <div class="flex items-center gap-3">
-            <button id="cartIconBtn" class="relative p-2 text-neutral-600 hover:text-neutral-900">
-              <span class="iconify w-6 h-6" data-icon="lucide:shopping-bag"></span>
-              <span id="cartCountBadge" class="absolute -top-1 -right-1 w-5 h-5 bg-rose-500 text-white text-xs font-medium rounded-full flex items-center justify-center hidden">0</span>
-            </button>
-          </div>
         </div>
+
+        <nav class="hidden md:flex items-center gap-8">
+          <button class="text-sm font-medium text-neutral-600 hover:text-neutral-900" id="popularProductsLink">Beliebte Produkte</button>
+          <button class="text-sm font-medium text-neutral-600 hover:text-neutral-900" id="howItWorksLink">So funktioniert's</button>
+        </nav>
+
+        <button id="cartIconBtn" class="relative p-2 text-neutral-600">
+            <span class="iconify w-6 h-6" data-icon="lucide:shopping-bag"></span>
+            <span id="cartCountBadge" class="absolute -top-1 -right-1 w-5 h-5 bg-rose-500 text-white text-xs font-medium rounded-full flex items-center justify-center hidden">0</span>
+        </button>
       </div>
     </header>
 
-    <main class="flex-grow sm:px-6 lg:px-8 lg:py-12 max-w-7xl w-full mx-auto pt-8 px-4 pb-8">
-      <div class="text-center mb-12">
-        <h1 class="text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight text-neutral-900 mb-4">Der smarte Beauty-Warenkorb</h1>
-        <p class="text-base sm:text-lg text-neutral-500 max-w-2xl mx-auto">Vergleiche Douglas, Sephora, Flaconi & Notino. Wir berechnen den besten Split für dich.</p>
+    <main class="flex-grow max-w-7xl w-full mx-auto p-4 sm:p-8">
+      <div class="text-center mb-12 pt-8">
+        <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-neutral-900 mb-4">Smarter Beauty-Preisvergleich</h1>
+        <p class="text-neutral-500 max-w-2xl mx-auto">Vergleiche Douglas, Sephora, Flaconi & Notino. Wir berechnen den besten Mix für dich.</p>
       </div>
 
       <div class="max-w-2xl mx-auto mb-12 flex gap-2">
-        <input type="text" id="searchInput" placeholder="Marke oder Produkt suchen..." class="w-full pl-4 pr-4 py-4 bg-white border border-neutral-200 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none shadow-sm transition-all">
-        <button id="searchBtn" class="px-8 bg-neutral-900 text-white rounded-xl font-medium hover:bg-neutral-800 transition-colors">Suchen</button>
+        <input type="text" id="searchInput" placeholder="Marke oder Produkt suchen..." class="w-full p-4 border border-neutral-200 rounded-xl outline-none focus:ring-2 focus:ring-rose-500 shadow-sm transition-all">
+        <button id="searchBtn" class="px-8 bg-neutral-900 text-white rounded-xl font-medium hover:bg-neutral-800">Suchen</button>
       </div>
 
       <div class="grid lg:grid-cols-3 gap-8">
         <div class="lg:col-span-2">
           <div id="productsGrid" class="grid sm:grid-cols-2 gap-4"></div>
           <div id="paginationContainer" class="mt-8 text-center hidden">
-             <button id="loadMoreBtn" class="px-8 py-3 border border-neutral-200 bg-white text-neutral-900 rounded-xl font-medium hover:bg-neutral-50 transition-all shadow-sm">
+             <button id="loadMoreBtn" class="px-8 py-3 border border-neutral-200 bg-white text-neutral-900 rounded-xl font-medium hover:bg-neutral-50 shadow-sm transition-all">
                 Weitere Produkte anzeigen
              </button>
           </div>
         </div>
 
-        <div id="basketSidebar" class="hidden lg:block lg:col-span-1">
+        <div id="basketSidebar" class="lg:col-span-1">
           <div class="bg-white border border-neutral-200 rounded-2xl sticky top-28 p-6 shadow-sm">
             <h2 class="font-bold text-lg mb-4">Warenkorb</h2>
-            <div id="basketEmpty" class="text-center py-8 text-neutral-400 text-sm">Füge Produkte hinzu zum Optimieren</div>
+            <div id="basketEmpty" class="text-center py-8 text-neutral-400 text-sm italic">Füge Produkte hinzu</div>
             <div id="basketList" class="space-y-3 mb-6 max-h-60 overflow-y-auto pr-2"></div>
             
             <div id="optimizationSection" class="border-t pt-6 hidden">
-                <div id="optionsList" class="mb-4"></div>
                 <div class="bg-emerald-50 p-4 rounded-xl border border-emerald-100 flex justify-between items-center mb-4">
                     <span class="text-emerald-800 text-sm font-bold uppercase tracking-tight">Bestpreis:</span>
                     <span id="bestPrice" class="text-2xl font-black text-emerald-700">€0.00</span>
                 </div>
+                <p class="text-[10px] text-neutral-400 text-center uppercase tracking-widest font-bold">Optimierung aktiv</p>
             </div>
           </div>
         </div>
       </div>
 
       <div id="shopComparison" class="mt-16 hidden">
-        <h2 class="text-xl font-bold mb-8 flex items-center gap-2">
-           <span class="iconify text-neutral-900" data-icon="lucide:layout-grid"></span>
-           Detaillierter Shop-Vergleich
-        </h2>
+        <h2 class="text-xl font-bold mb-8">Detaillierter Shop-Vergleich</h2>
         <div id="shopCards" class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6"></div>
       </div>
     </main>
 
     <footer class="bg-neutral-900 text-white py-16 px-8 mt-20 border-t border-neutral-800">
-      <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-12 text-center md:text-left">
+      <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-12">
         <div>
-            <h3 class="font-bold text-xl mb-4 tracking-tighter">COMBIMETICS</h3>
-            <p class="text-neutral-400 text-sm leading-relaxed">Dein smarter Preisvergleich für Parfüm & Skincare. Wir finden den günstigsten Gesamtwert.</p>
+            <h3 class="font-bold text-xl mb-4">Combimetics</h3>
+            <p class="text-neutral-400 text-sm leading-relaxed">Dein smarter Preisvergleich für Parfüm & Skincare.</p>
         </div>
         <div>
             <h3 class="font-bold mb-4 uppercase text-xs tracking-widest text-neutral-500">Rechtliches</h3>
@@ -125,29 +113,27 @@
             <h3 class="font-bold mb-4 uppercase text-xs tracking-widest text-neutral-500">Service</h3>
             <ul class="space-y-3 text-sm text-neutral-400">
                 <li><a href="ueber-uns.html" class="hover:text-white transition-colors">Über uns</a></li>
-                <li><a href="#" class="hover:text-white transition-colors">FAQ</a></li>
             </ul>
         </div>
       </div>
-      <div class="max-w-7xl mx-auto mt-12 pt-8 border-t border-neutral-800 text-center text-[10px] text-neutral-600 uppercase tracking-widest">
-        © 2026 Combimetics Deutschland. Wir nutzen Affiliate-Links.
+      <div class="max-w-7xl mx-auto mt-12 pt-8 border-t border-neutral-800 text-center text-[10px] text-neutral-600">
+        © 2026 Combimetics. Affiliate-Links enthalten.
       </div>
     </footer>
 
-    <div id="howItWorksModal" class="modal-overlay fixed inset-0 hidden items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-        <div class="bg-white rounded-3xl p-8 max-w-md w-full relative shadow-2xl">
-            <div class="w-12 h-12 bg-rose-50 rounded-full flex items-center justify-center mb-6">
-                <span class="iconify text-rose-500 w-6 h-6" data-icon="lucide:calculator"></span>
+    <div id="howItWorksModal" class="modal-overlay fixed inset-0 bg-black/60 backdrop-blur-sm p-4">
+        <div class="bg-white rounded-3xl p-8 max-w-md w-full relative shadow-2xl text-center">
+            <div class="w-16 h-16 bg-rose-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                <span class="iconify text-rose-500 w-8 h-8" data-icon="lucide:zap"></span>
             </div>
-            <h3 class="text-xl font-bold mb-4 text-neutral-900">Der Warenkorb-Splitter</h3>
-            <p class="text-neutral-600 text-sm leading-relaxed mb-8">Oft zahlst du bei einem Shop hohe Versandkosten, wenn du nur ein Produkt kaufst. Unser Algorithmus prüft, ob es günstiger ist, den Korb aufzuteilen oder alles gesammelt bei einem Shop zu bestellen, um Freigrenzen zu erreichen.</p>
-            <button id="closeHowItWorks" class="w-full py-4 bg-neutral-900 text-white rounded-2xl font-bold hover:bg-neutral-800 transition-all">Verstanden</button>
+            <h3 class="text-2xl font-bold mb-4 text-neutral-900">Smart-Cart Logic</h3>
+            <p class="text-neutral-600 text-sm leading-relaxed mb-8">Wir prüfen live, ob es günstiger ist, den Warenkorb aufzuteilen, um Versandkostenfreigrenzen bei verschiedenen Shops zu erreichen.</p>
+            <button id="closeHowItWorks" class="w-full py-4 bg-neutral-900 text-white rounded-2xl font-bold hover:bg-neutral-800 transition-all shadow-lg">Verstanden</button>
         </div>
     </div>
 
     <script>
       document.addEventListener("DOMContentLoaded", () => {
-        // --- SETUP ---
         const SUPABASE_URL = 'https://ccoikocmrusafnelxzei.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_yXYlKpFHmDeTTN8L46CsRg_BXC3GlzB';
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -162,52 +148,39 @@
         let allProducts = [];
         let displayedProducts = [];
         let basket = [];
-        let visibleCount = 10; // Initialer Limit
+        let visibleCount = 10;
 
-        // --- FETCH ---
         async function loadData() {
-            try {
-                const { data: pData } = await supabase.from('products').select('*');
-                const { data: prData } = await supabase.from('prices').select('*');
-                allProducts = pData.map(p => ({
-                    ...p, prices: (prData || []).filter(pr => pr.ean === p.ean)
-                }));
-                displayedProducts = [...allProducts];
-                renderProducts();
-            } catch (e) {
-                console.error("Datenbankfehler:", e);
-            }
+            const { data: pData } = await supabase.from('products').select('*');
+            const { data: prData } = await supabase.from('prices').select('*');
+            allProducts = pData.map(p => ({ ...p, prices: prData.filter(x => x.ean === p.ean) }));
+            displayedProducts = [...allProducts];
+            renderProducts();
         }
 
-        // --- RENDER PRODUCTS (Mit Pagination) ---
         function renderProducts() {
             const grid = document.getElementById('productsGrid');
-            const pagination = document.getElementById('paginationContainer');
+            const btnContainer = document.getElementById('paginationContainer');
+            const slice = displayedProducts.slice(0, visibleCount);
             
-            const listToDisplay = displayedProducts.slice(0, visibleCount);
-            
-            grid.innerHTML = listToDisplay.map(p => {
+            grid.innerHTML = slice.map(p => {
                 const hasPr = p.prices?.length > 0;
                 const inB = basket.find(b => b.id === p.id);
                 const min = hasPr ? Math.min(...p.prices.map(x => x.price)) : 0;
                 return `
                     <div class="bg-white border border-neutral-200 rounded-2xl p-5 hover:shadow-lg transition-all flex flex-col group">
-                        <div class="h-40 mb-4 overflow-hidden rounded-lg">
-                           <img src="${p.image}" class="w-full h-full object-contain group-hover:scale-105 transition-transform">
-                        </div>
-                        <p class="text-[10px] font-black uppercase text-neutral-400 tracking-widest mb-1">${p.brand}</p>
-                        <h3 class="text-sm font-semibold mb-2 h-10 overflow-hidden line-clamp-2">${p.name}</h3>
-                        <p class="text-lg font-bold text-neutral-900 mb-4">${hasPr ? '€' + min.toFixed(2) : 'Nicht vorrätig'}</p>
-                        <button onclick="window.toggleBasket(${p.id})" ${!hasPr ? 'disabled' : ''} class="w-full py-3 rounded-xl font-bold text-xs transition-all ${inB ? 'bg-rose-500 text-white' : 'bg-neutral-900 text-white hover:bg-neutral-800 disabled:bg-neutral-100 disabled:text-neutral-400'}">
+                        <img src="${p.image}" class="w-full h-40 object-contain mb-4 rounded-lg group-hover:scale-105 transition-transform">
+                        <p class="text-[10px] font-black uppercase text-neutral-400 mb-1">${p.brand}</p>
+                        <h3 class="text-sm font-semibold mb-2 h-10 overflow-hidden">${p.name}</h3>
+                        <p class="text-lg font-bold text-neutral-900 mb-4">${hasPr ? '€' + min.toFixed(2) : 'n/a'}</p>
+                        <button onclick="window.toggleBasket(${p.id})" ${!hasPr ? 'disabled' : ''} class="w-full py-3 rounded-xl font-bold text-xs ${inB ? 'bg-rose-500 text-white' : 'bg-neutral-900 text-white'}">
                             ${inB ? '✓ Im Korb' : '+ Hinzufügen'}
                         </button>
                     </div>
                 `;
             }).join('');
-
-            // Pagination Button Logik
-            if (displayedProducts.length > visibleCount) pagination.classList.remove('hidden');
-            else pagination.classList.add('hidden');
+            
+            btnContainer.classList.toggle('hidden', displayedProducts.length <= visibleCount);
         }
 
         document.getElementById('loadMoreBtn').onclick = () => {
@@ -215,7 +188,6 @@
             renderProducts();
         };
 
-        // --- BASKET & OPTIMIZATION ---
         window.toggleBasket = (id) => {
             const p = allProducts.find(x => x.id === id);
             const idx = basket.findIndex(b => b.id === id);
@@ -224,19 +196,13 @@
         };
 
         function updateUI() {
-            renderBasket();
-            renderProducts();
+            const list = document.getElementById('basketList');
             document.getElementById('cartCountBadge').textContent = basket.length;
             document.getElementById('cartCountBadge').classList.toggle('hidden', basket.length === 0);
-        }
-
-        function renderBasket() {
-            const list = document.getElementById('basketList');
-            const empty = document.getElementById('basketEmpty');
-            empty.classList.toggle('hidden', basket.length > 0);
+            document.getElementById('basketEmpty').classList.toggle('hidden', basket.length > 0);
             
             list.innerHTML = basket.map(b => `
-                <div class="flex justify-between items-center p-3 bg-neutral-50 rounded-xl border border-neutral-100 animate-in slide-in-from-right-2">
+                <div class="flex justify-between items-center p-3 bg-neutral-50 rounded-xl border border-neutral-100">
                     <span class="text-[10px] font-medium truncate w-32">${b.name}</span>
                     <button onclick="window.toggleBasket(${b.id})" class="text-neutral-400 hover:text-rose-500"><span class="iconify" data-icon="lucide:trash-2"></span></button>
                 </div>
@@ -247,13 +213,13 @@
                 document.getElementById('optimizationSection').classList.add('hidden');
                 document.getElementById('shopComparison').classList.add('hidden');
             }
+            renderProducts();
         }
 
         function calculateOptimization() {
             document.getElementById('optimizationSection').classList.remove('hidden');
             document.getElementById('shopComparison').classList.remove('hidden');
 
-            // 1. Einzel-Shop Optionen
             const options = Object.keys(shops).map(sName => {
                 let sub = 0, missing = 0;
                 basket.forEach(item => {
@@ -264,55 +230,39 @@
                 return { name: sName, total: sub + ship, sub, ship, missing };
             });
 
-            // 2. Mix & Match (Bester Split)
             let splitSub = 0, splitShip = 0;
-            const shopSplitGroups = {};
+            const shopGroups = {};
             basket.forEach(item => {
                 const best = item.prices.reduce((min, p) => p.price < min.price ? p : min, item.prices[0]);
                 if(best) {
                     splitSub += best.price;
-                    shopSplitGroups[best.shop] = (shopSplitGroups[best.shop] || 0) + best.price;
+                    shopGroups[best.shop] = (shopGroups[best.shop] || 0) + best.price;
                 }
             });
-            Object.keys(shopSplitGroups).forEach(s => {
-               if(shopSplitGroups[s] < shops[s].threshold) splitShip += shops[s].shipping;
-            });
-            
+            Object.keys(shopGroups).forEach(s => { if(shopGroups[s] < shops[s].threshold) splitShip += shops[s].shipping; });
             const splitOption = { name: 'Mix & Match', total: splitSub + splitShip, sub: splitSub, ship: splitShip, isSplit: true };
-            const allResults = [splitOption, ...options].sort((a,b) => a.total - b.total);
 
+            const allResults = [splitOption, ...options].sort((a,b) => a.total - b.total);
             document.getElementById('bestPrice').textContent = '€' + allResults[0].total.toFixed(2);
             
             document.getElementById('shopCards').innerHTML = allResults.map((o, i) => `
-                <div class="bg-white border ${i === 0 ? 'border-emerald-500 ring-4 ring-emerald-50' : 'border-neutral-200'} p-6 rounded-3xl transition-all shadow-sm">
-                    <div class="flex justify-between items-start mb-4">
-                        <h4 class="font-black text-neutral-900">${o.name}</h4>
-                        ${i === 0 ? '<span class="bg-emerald-500 text-white text-[10px] px-2 py-1 rounded-full font-bold">BEST</span>' : ''}
-                    </div>
-                    <div class="text-xs space-y-2 text-neutral-500 mb-4">
+                <div class="bg-white border ${i === 0 ? 'border-emerald-500 ring-4 ring-emerald-50' : 'border-neutral-200'} p-6 rounded-3xl shadow-sm">
+                    <h4 class="font-black text-neutral-900 mb-4 uppercase text-xs tracking-widest">${o.name}</h4>
+                    <div class="text-[11px] space-y-2 text-neutral-500 mb-4">
                         <div class="flex justify-between"><span>Artikel</span><span>€${o.sub.toFixed(2)}</span></div>
                         <div class="flex justify-between"><span>Versand</span><span>${o.ship === 0 ? 'GRATIS' : '€'+o.ship.toFixed(2)}</span></div>
                         ${o.missing > 0 ? `<div class="text-rose-500 font-bold">${o.missing} Produkt(e) fehlen</div>` : ''}
                     </div>
-                    <div class="border-t pt-4 flex justify-between items-center">
-                        <span class="text-sm font-bold">Total</span>
-                        <span class="text-lg font-black ${i === 0 ? 'text-emerald-600' : ''}">€${o.total.toFixed(2)}</span>
+                    <div class="border-t pt-4 flex justify-between items-center font-black">
+                        <span>Total</span><span class="text-lg ${i === 0 ? 'text-emerald-600' : ''}">€${o.total.toFixed(2)}</span>
                     </div>
                 </div>
             `).join('');
         }
 
-        // --- EVENTS ---
-        document.getElementById('howItWorksLink').onclick = () => document.getElementById('howItWorksModal').classList.remove('hidden');
-        document.getElementById('closeHowItWorks').onclick = () => document.getElementById('howItWorksModal').classList.add('hidden');
+        document.getElementById('howItWorksLink').onclick = () => document.getElementById('howItWorksModal').classList.add('active');
+        document.getElementById('closeHowItWorks').onclick = () => document.getElementById('howItWorksModal').classList.remove('active');
         
-        document.getElementById('popularProductsLink').onclick = () => {
-            displayedProducts = allProducts.filter(p => p.trending);
-            visibleCount = 10;
-            renderProducts();
-            window.scrollTo({ top: 500, behavior: 'smooth' });
-        };
-
         document.getElementById('searchBtn').onclick = () => {
             const q = document.getElementById('searchInput').value.toLowerCase();
             displayedProducts = allProducts.filter(p => p.name.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q));

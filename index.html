@@ -61,7 +61,7 @@
           <button class="text-sm font-medium text-neutral-600 hover:text-neutral-900 transition-colors" id="howItWorksLink">So funktioniert's</button>
         </nav>
 
-        <button id="cartIconBtn" class="relative p-2 text-neutral-600 hover:text-neutral-900">
+        <button id="cartIconBtn" class="relative p-2 text-neutral-600 hover:text-neutral-900 transition-colors">
             <span class="iconify w-6 h-6" data-icon="lucide:shopping-bag"></span>
             <span id="cartCountBadge" class="absolute -top-1 -right-1 w-5 h-5 bg-rose-500 text-white text-xs font-medium rounded-full flex items-center justify-center hidden">0</span>
         </button>
@@ -70,7 +70,7 @@
 
     <main class="flex-grow max-w-7xl w-full mx-auto p-4 sm:p-8">
       <div class="text-center mb-12 pt-8">
-        <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-neutral-900 mb-4">Smarter Beauty-Preisvergleich</h1>
+        <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-neutral-900 mb-4">Smarter Beauty-Warenkorb</h1>
         <p class="text-neutral-500 max-w-2xl mx-auto">Vergleiche Douglas, Sephora, Flaconi & Notino. Wir berechnen den besten Split für dich.</p>
       </div>
 
@@ -164,6 +164,16 @@
         </div>
     </div>
 
+    <div id="mobileCheckoutBar" class="fixed bottom-0 left-0 right-0 bg-white border-t border-neutral-200 p-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-40 hidden md:hidden flex justify-between items-center transform transition-transform translate-y-full">
+        <div class="flex flex-col">
+            <span class="text-xs text-neutral-500">Gesamt ab</span>
+            <span id="mobileTotal" class="text-xl font-black text-emerald-600">€0.00</span>
+        </div>
+        <button onclick="document.getElementById('shopComparison').scrollIntoView({behavior: 'smooth'})" class="bg-neutral-900 text-white px-6 py-3 rounded-xl font-bold text-sm">
+            Zum Vergleich
+        </button>
+    </div>
+
     <div id="howItWorksModal" class="modal-overlay">
         <div class="bg-white rounded-3xl p-8 max-w-md w-full relative shadow-2xl text-center mx-4 animate-in zoom-in-95">
             <div class="w-16 h-16 bg-rose-50 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -193,13 +203,12 @@
         let basket = [];
         let visibleCount = 10;
 
-        // --- FETCH DATA (Mit Fehlerbehandlung) ---
+        // --- FETCH DATA ---
         async function loadData() {
             try {
                 const { data: pData } = await supabase.from('products').select('*');
                 const { data: prData } = await supabase.from('prices').select('*');
                 
-                // Wir speichern die Preise DIREKT im Produkt-Objekt
                 allProducts = (pData || []).map(p => ({
                     ...p, 
                     prices: (prData || []).filter(x => x.ean === p.ean)
@@ -207,7 +216,7 @@
                 displayedProducts = [...allProducts];
                 renderProducts();
             } catch (e) {
-                console.error("Fehler beim Laden:", e);
+                console.error("Datenbankfehler:", e);
             }
         }
 
@@ -243,12 +252,9 @@
 
         document.getElementById('loadMoreBtn').onclick = () => { visibleCount += 30; renderProducts(); };
 
-        // --- BASKET ---
+        // --- BASKET LOGIC ---
         window.toggleBasket = (id) => {
-            // WICHTIG: Wir holen das Produkt aus allProducts, wo die Preise schon drin sind!
             const p = allProducts.find(x => x.id === id);
-            if (!p) return;
-
             const idx = basket.findIndex(b => b.id === id);
             if(idx > -1) basket.splice(idx, 1); else basket.push(p);
             updateUI();
@@ -257,6 +263,7 @@
         function updateUI() {
             const list = document.getElementById('basketList');
             const mobileList = document.getElementById('mobileBasketItems');
+            const mobileBar = document.getElementById('mobileCheckoutBar');
             const count = basket.length;
 
             document.getElementById('cartCountBadge').textContent = count;
@@ -264,7 +271,15 @@
             document.getElementById('basketEmpty').classList.toggle('hidden', count > 0);
             document.getElementById('mobileBasketEmpty').classList.toggle('hidden', count > 0);
 
-            // Generiere HTML für beide Listen (Desktop & Mobile)
+            // Toggle Mobile Bar
+            if(count > 0) {
+                mobileBar.classList.remove('hidden');
+                setTimeout(() => mobileBar.classList.remove('translate-y-full'), 10);
+            } else {
+                mobileBar.classList.add('translate-y-full');
+            }
+
+            // Render Basket Items
             const listHTML = basket.map(b => {
                 const prices = b.prices || [];
                 const itemMin = prices.length > 0 ? Math.min(...prices.map(x => x.price)) : 0;
@@ -272,6 +287,7 @@
                 <div class="flex justify-between items-center p-3 bg-neutral-50 rounded-xl border border-neutral-100 animate-in slide-in-from-right-2 mb-2">
                     <div class="flex flex-col max-w-[70%]">
                         <span class="text-[10px] font-medium truncate">${b.name}</span>
+                        <span class="text-[9px] text-neutral-400">${b.brand}</span>
                     </div>
                     <div class="flex items-center gap-3">
                         <span class="text-[10px] font-bold">€${itemMin.toFixed(2)}</span>
@@ -291,8 +307,9 @@
             renderProducts();
         }
 
+        // --- OPTIMIZATION ALGORITHM (FIXED) ---
         function calculateOptimization() {
-            // 1. Berechnung starten
+            // 1. Calculate Single Shops
             const options = Object.keys(shops).map(sName => {
                 let sub = 0, missing = 0;
                 basket.forEach(item => {
@@ -303,7 +320,7 @@
                 return { name: sName, total: sub + ship, sub, ship, missing };
             });
 
-            // 2. Mix & Match
+            // 2. Calculate Mix & Match (Split)
             let splitSub = 0, splitShip = 0;
             const shopGroups = {};
             basket.forEach(item => {
@@ -319,22 +336,29 @@
             });
             
             const splitOption = { name: 'Mix & Match (Split)', total: splitSub + splitShip, sub: splitSub, ship: splitShip, isSplit: true, missing: 0 };
-            const allResults = [splitOption, ...options].sort((a,b) => a.total - b.total);
             
-            // 3. UI Update (Sichtbar machen!)
+            // 3. SORTING FIX: Disqualify missing items from top spot
+            const allResults = [splitOption, ...options];
+            const validResults = allResults.filter(r => r.missing === 0).sort((a,b) => a.total - b.total);
+            
+            // Fallback if no valid option exists (unlikely but safe)
+            const winner = validResults.length > 0 ? validResults[0] : allResults.sort((a,b) => a.total - b.total)[0];
+
+            // 4. Update UI
             document.getElementById('optimizationSection').classList.remove('hidden');
             document.getElementById('shopComparison').classList.remove('hidden');
             
-            // Bestpreis setzen
-            document.getElementById('bestPrice').textContent = '€' + allResults[0].total.toFixed(2);
+            document.getElementById('bestPrice').textContent = '€' + winner.total.toFixed(2);
+            document.getElementById('mobileTotal').textContent = '€' + winner.total.toFixed(2);
             
-            // Shop Cards Rendern
-            document.getElementById('shopCards').innerHTML = allResults.map((o, i) => `
-                <div class="bg-white border ${i === 0 ? 'border-emerald-500 ring-4 ring-emerald-50' : 'border-neutral-200'} p-6 rounded-3xl shadow-sm h-full flex flex-col justify-between">
+            document.getElementById('shopCards').innerHTML = allResults.map(o => {
+                const isWinner = o.name === winner.name;
+                return `
+                <div class="bg-white border ${isWinner ? 'border-emerald-500 ring-4 ring-emerald-50' : 'border-neutral-200'} p-6 rounded-3xl shadow-sm h-full flex flex-col justify-between">
                     <div>
                         <div class="flex justify-between items-start mb-4">
                             <h4 class="font-black text-neutral-900 uppercase text-[10px] tracking-widest">${o.name}</h4>
-                            ${i === 0 ? '<span class="bg-emerald-500 text-white text-[10px] px-2 py-1 rounded-full font-bold">BEST</span>' : ''}
+                            ${isWinner ? '<span class="bg-emerald-500 text-white text-[10px] px-2 py-1 rounded-full font-bold">BEST</span>' : ''}
                         </div>
                         <div class="text-[11px] space-y-2 text-neutral-500 mb-4">
                             <div class="flex justify-between"><span>Artikel</span><span>€${o.sub.toFixed(2)}</span></div>
@@ -343,21 +367,23 @@
                         </div>
                     </div>
                     <div class="border-t pt-4 flex justify-between items-center font-black">
-                        <span class="text-xs uppercase">Total</span><span class="text-lg ${i === 0 ? 'text-emerald-600' : ''}">€${o.total.toFixed(2)}</span>
+                        <span class="text-xs uppercase">Total</span><span class="text-lg ${isWinner ? 'text-emerald-600' : ''}">€${o.total.toFixed(2)}</span>
                     </div>
                 </div>
-            `).join('');
+            `}).join('');
         }
 
-        // --- DRAWER & MODAL LOGIC ---
+        // --- DRAWER & POPUP EVENTS ---
         document.getElementById('cartIconBtn').onclick = () => document.getElementById('cartOverlay').classList.remove('hidden');
         
+        const modal = document.getElementById('howItWorksModal');
         document.getElementById('howItWorksLink').onclick = (e) => { 
-            e.preventDefault();
-            document.getElementById('howItWorksModal').classList.add('active'); 
+            e.preventDefault(); 
+            modal.classList.add('active'); 
         };
-        document.getElementById('closeHowItWorks').onclick = () => document.getElementById('howItWorksModal').classList.remove('active');
+        document.getElementById('closeHowItWorks').onclick = () => modal.classList.remove('active');
         
+        // --- SEARCH ---
         document.getElementById('searchBtn').onclick = () => {
             const q = document.getElementById('searchInput').value.toLowerCase();
             displayedProducts = allProducts.filter(p => p.name.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q));

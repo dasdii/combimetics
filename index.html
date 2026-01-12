@@ -316,7 +316,11 @@
                     const p = (item.prices || []).find(pr => pr.shop === sName);
                     if(p) sub += p.price; else missing++;
                 });
-                const ship = sub >= shops[sName].threshold ? 0 : shops[sName].shipping;
+                
+                // FIX: Wenn sub 0 ist (nichts verfügbar), sind Versandkosten 0.
+                // Ansonsten normale Schwellenwert-Logik.
+                const ship = (sub === 0 || sub >= shops[sName].threshold) ? 0 : shops[sName].shipping;
+                
                 return { name: sName, total: sub + ship, sub, ship, missing };
             });
 

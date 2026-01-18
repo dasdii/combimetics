@@ -199,6 +199,27 @@
         </div>
     </div>
 
+    <div id="checkoutModal" class="modal-overlay">
+        <div class="bg-white rounded-3xl p-6 max-w-md w-full relative shadow-2xl mx-4 animate-in zoom-in-95">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold">Dein Deal</h3>
+                <button onclick="document.getElementById('checkoutModal').classList.remove('active')" class="p-2 hover:bg-neutral-100 rounded-full">
+                    <span class="iconify w-6 h-6" data-icon="lucide:x"></span>
+                </button>
+            </div>
+            
+            <p class="text-sm text-neutral-500 mb-4">Klicke auf die Links, um die Produkte beim jeweiligen Händler in den Korb zu legen:</p>
+            
+            <div id="checkoutLinks" class="space-y-3 mb-6">
+                </div>
+
+            <div class="bg-emerald-50 p-4 rounded-xl border border-emerald-100 text-center">
+                <span class="text-xs text-emerald-800 font-bold uppercase">Gesamtsumme</span>
+                <div class="text-2xl font-black text-emerald-700" id="checkoutTotal">€0.00</div>
+            </div>
+        </div>
+    </div>
+
     <script>
       document.addEventListener("DOMContentLoaded", () => {
         const SUPABASE_URL = 'https://ccoikocmrusafnelxzei.supabase.co';
@@ -321,53 +342,91 @@
             renderProducts();
         }
 
-        // --- OPTIMIZATION ALGORITHM (FIXED) ---
+        // --- OPTIMIZATION ALGORITHM (NEU MIT LINKS) ---
+        let optimizationResults = []; // Globaler Speicher für das Popup
+
         function calculateOptimization() {
-            // 1. Calculate Single Shops
+            // 1. Einzelne Shops berechnen
             const options = Object.keys(shops).map(sName => {
                 let sub = 0, missing = 0;
+                let itemsList = []; 
+
                 basket.forEach(item => {
+                    // Suche Preis UND URL für diesen Shop
                     const p = (item.prices || []).find(pr => pr.shop === sName);
-                    if(p) sub += p.price; else missing++;
+                    
+                    if(p) {
+                        sub += p.price;
+                        itemsList.push({
+                            name: item.name,
+                            price: p.price,
+                            shop: sName,
+                            url: p.url // Hier holen wir den Link aus Supabase
+                        });
+                    } else {
+                        missing++;
+                    }
                 });
                 
                 const ship = (sub === 0 || sub >= shops[sName].threshold) ? 0 : shops[sName].shipping;
                 
-                return { name: sName, total: sub + ship, sub, ship, missing };
+                return { 
+                    name: sName, 
+                    total: sub + ship, 
+                    sub, ship, missing, 
+                    items: itemsList 
+                };
             });
 
-            // 2. Calculate Mix & Match (Split)
+            // 2. Mix & Match (Split) berechnen
             let splitSub = 0, splitShip = 0;
+            let splitItems = [];
             const shopGroups = {};
+
             basket.forEach(item => {
                 const prices = item.prices || [];
                 if(prices.length > 0) {
                     const best = prices.reduce((min, p) => p.price < min.price ? p : min, prices[0]);
+                    
                     splitSub += best.price;
                     shopGroups[best.shop] = (shopGroups[best.shop] || 0) + best.price;
+                    
+                    splitItems.push({
+                        name: item.name,
+                        price: best.price,
+                        shop: best.shop,
+                        url: best.url // Link speichern
+                    });
                 }
             });
+
             Object.keys(shopGroups).forEach(s => { 
                 if(shops[s] && shopGroups[s] < shops[s].threshold) splitShip += shops[s].shipping; 
             });
             
-            const splitOption = { name: 'Mix & Match (Split)', total: splitSub + splitShip, sub: splitSub, ship: splitShip, isSplit: true, missing: 0 };
+            const splitOption = { 
+                name: 'Mix & Match (Split)', 
+                total: splitSub + splitShip, 
+                sub: splitSub, ship: splitShip, 
+                isSplit: true, missing: 0,
+                items: splitItems 
+            };
             
-            // 3. SORTING FIX: Disqualify missing items from top spot
+            // 3. Ergebnisse sortieren
             const allResults = [splitOption, ...options];
             const validResults = allResults.filter(r => r.missing === 0).sort((a,b) => a.total - b.total);
-            
-            // Fallback if no valid option exists (unlikely but safe)
             const winner = validResults.length > 0 ? validResults[0] : allResults.sort((a,b) => a.total - b.total)[0];
+            
+            optimizationResults = allResults; // Ergebnisse speichern für das Popup
 
-            // 4. Update UI
+            // UI Anzeigen
             document.getElementById('optimizationSection').classList.remove('hidden');
             document.getElementById('shopComparison').classList.remove('hidden');
-            
             document.getElementById('bestPrice').textContent = '€' + winner.total.toFixed(2);
             document.getElementById('mobileTotal').textContent = '€' + winner.total.toFixed(2);
             
-            document.getElementById('shopCards').innerHTML = allResults.map(o => {
+            // Karten rendern
+            document.getElementById('shopCards').innerHTML = allResults.map((o, index) => {
                 const isWinner = o.name === winner.name;
                 return `
                 <div class="bg-white border ${isWinner ? 'border-emerald-500 ring-4 ring-emerald-50' : 'border-neutral-200'} p-6 rounded-3xl shadow-sm h-full flex flex-col justify-between">
@@ -382,12 +441,42 @@
                             ${o.missing > 0 ? `<div class="text-rose-500 font-bold mt-2 pt-2 border-t border-rose-100">${o.missing} Produkt(e) fehlen</div>` : ''}
                         </div>
                     </div>
-                    <div class="border-t pt-4 flex justify-between items-center font-black">
-                        <span class="text-xs uppercase">Total</span><span class="text-lg ${isWinner ? 'text-emerald-600' : ''}">€${o.total.toFixed(2)}</span>
+                    <div class="border-t pt-4">
+                        <div class="flex justify-between items-center font-black mb-3">
+                            <span class="text-xs uppercase">Total</span><span class="text-lg ${isWinner ? 'text-emerald-600' : ''}">€${o.total.toFixed(2)}</span>
+                        </div>
+                        <button onclick="openCheckout(${index})" ${o.missing > 0 ? 'disabled' : ''} class="w-full py-2 rounded-xl font-bold text-xs transition-colors ${isWinner ? 'bg-emerald-500 hover:bg-emerald-600 text-white' : 'bg-neutral-900 hover:bg-neutral-800 text-white disabled:bg-neutral-200 disabled:text-neutral-400'}">
+                            Zum Deal ->
+                        </button>
                     </div>
                 </div>
             `}).join('');
         }
+
+        // --- NEU: FUNKTION UM DAS POPUP ZU ÖFFNEN ---
+        window.openCheckout = (index) => {
+            const result = optimizationResults[index];
+            const modal = document.getElementById('checkoutModal');
+            const list = document.getElementById('checkoutLinks');
+            
+            document.getElementById('checkoutTotal').textContent = '€' + result.total.toFixed(2);
+            
+            // Links generieren
+            list.innerHTML = result.items.map(item => `
+                <a href="${item.url || '#'}" target="_blank" class="flex items-center justify-between p-3 bg-neutral-50 hover:bg-neutral-100 border border-neutral-200 rounded-xl transition-colors group">
+                    <div class="flex flex-col">
+                        <span class="font-bold text-sm text-neutral-900">${item.shop}</span>
+                        <span class="text-xs text-neutral-500">${item.name}</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="font-bold text-emerald-600">€${item.price.toFixed(2)}</span>
+                        <span class="iconify text-neutral-400 group-hover:text-neutral-900" data-icon="lucide:external-link"></span>
+                    </div>
+                </a>
+            `).join('');
+
+            modal.classList.add('active');
+        };
 
         // --- DRAWER & POPUP EVENTS ---
         document.getElementById('cartIconBtn').onclick = () => document.getElementById('cartOverlay').classList.remove('hidden');
